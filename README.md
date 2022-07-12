@@ -1,5 +1,5 @@
-# DeepLearning-SLAM
-This is the implementation of the Deep Neural SLAM algorithm that is an all-through Deep Learning based solution for the vision based Simultaneous Localization and Mapping (SLAM) task.
+# ATDN vSLAM
+This is the implementation of the ATDN vSLAM algorithm that is an all-through Deep Learning based solution for the vision based Simultaneous Localization and Mapping (SLAM) task.
 
 
 ## Prerequisites
