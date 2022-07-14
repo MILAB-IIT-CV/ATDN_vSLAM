@@ -1,6 +1,16 @@
 # ATDN vSLAM
-This is the implementation of the ATDN vSLAM algorithm that is an all-through Deep Learning based solution for the vision based Simultaneous Localization and Mapping (SLAM) task.
+This is the implementation of the ATDN vSLAM algorithm ([paper](https://pp.bme.hu/eecs/article/view/20437)) that is an all-through Deep Learning based solution for the vision based Simultaneous Localization and Mapping (SLAM) task.
 
+If you are using this work please cite our paper:
+```bibtex
+@article{Szántó_Bogár_Vajta_2022, 
+title={ATDN vSLAM: An All-Through Deep Learning-Based Solution for Visual Simultaneous Localization and Mapping}, 
+url={https://pp.bme.hu/eecs/article/view/20437}, 
+DOI={10.3311/PPee.20437}, 
+abstractNote={&amp;lt;p&amp;gt;In this paper, a novel solution is introduced for visual Simultaneous Localization and Mapping (vSLAM) that is built up of Deep Learning components. The proposed architecture is a highly modular framework in which each component offers state of the art results in their respective fields of vision-based Deep Learning solutions. The paper shows that with the synergic integration of these individual building blocks, a functioning and efficient all-through deep neural (ATDN) vSLAM system can be created. The Embedding Distance Loss function is introduced and using it the ATDN architecture is trained. The resulting system managed to achieve 4.4% translation and 0.0176 deg/m rotational error on a subset of the KITTI dataset. The proposed architecture can be used for efficient and low-latency autonomous driving (AD) aiding database creation as well as a basis for autonomous vehicle (AV) control.&amp;lt;/p&amp;gt;}, 
+journal={Periodica Polytechnica Electrical Engineering and Computer Science}, 
+author={Szántó, Mátyás and Bogár, György Richárd and Vajta, László}, year={2022} }
+```
 
 ## Prerequisites
 - PyTorch: The main Machine Learning library.
