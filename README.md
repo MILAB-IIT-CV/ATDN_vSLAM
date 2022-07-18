@@ -17,11 +17,30 @@ If you are using this work please cite our paper:
 
 ## Prerequisites
 - PyTorch: The main Machine Learning library.
-- GMA optical flow library: Used for Deep Learnig based flow estimation (has to be cloned in the SLAM's library to a GMA subfolder)
+- [GMA](https://github.com/zacjiang/GMA) optical flow library: Used for Deep Learnig based flow estimation (has to be cloned in the SLAM's library to a GMA subfolder. After cloning, imports have to be updated.)
+- For GMA, [einops](https://github.com/arogozhnikov/einops) is also required.
 
 # Using the implemented SLAM system
-Here is an example how to use the SLAM.
-### First, imports, dataset, arguments object and SLAM instantiation.
+In the following there is a detailed example of how to use the SLAM. A Jupyter notebook file (slam_test.ipynb) is also available to try out the key features of the framework.
+
+ Before using the SLAM, a .yaml config file is required for the Arguments object creation. Here is an example how config.yaml should look like:
+ ```yaml
+ !!python/object:__main__.Arguments {
+  batch_size: 16, 
+  data_path: path/to/dataset, 
+  device: 'cuda:1',
+  epochs: 10, 
+  epsilon: 1.0e-08, 
+  load_file: odometry/clvo_last4_0.pth, 
+  lr: 0.001, 
+  save_file: odometry/clvo_last4_1.pth,
+  sequence_length: 4, 
+  wd: 0.0001, 
+  weight_decay: false
+}
+ ```
+
+### Imports, dataset, arguments object and SLAM instantiation.
 The arguments class is implemented in helpers.py and is a convenient way to handle generally useful functionality and variables.
 
 ```python
@@ -88,7 +107,7 @@ slam_call_time = np.array(slam_call_time)
 slam.end_odometry()
 ```
 
-### The keyframe positions are saved under data_path/poses.pht, so it can be plotted with the following
+### The keyframe positions are saved under data_path/poses.pht thereby can be plotted with the following
 
 ```python
 import matplotlib.pyplot as plt
