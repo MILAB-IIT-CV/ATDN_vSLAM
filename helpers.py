@@ -1,13 +1,11 @@
 import sys, os
 sys.path.insert(0, os.path.abspath(".."))
 import torch
+import yaml
 
 
-class Arguments():
+class GMA_Parameters():
     def __init__(self):
-        
-        # Dataset parameters
-        self.data_path = None # TODO Change to config file data read
 
         # GMA parameters
         self.model = "GMA/checkpoints/gma-kitti.pth"
@@ -21,20 +19,7 @@ class Arguments():
         self.no_alpha = False
         self.no_residuals = False
         self.model_name = self.model
-        self.path = "imgs"
-
-        # Training parameters
-        self.device = 'cuda:1'
-        self.epochs = 10
-        self.lr = 1e-3
-        self.wd = 1e-4
-        self.epsilon = 1e-8
-        self.batch_size = 16
-        self.sequence_length = 4
-        self.load_file = "odometry/clvo_last4_0.pth"
-        self.save_file = "odometry/clvo_last4_1.pth"
-        self.weight_decay = False
-        
+        self.path = "imgs"       
         
         self.dictionary = {
                            "model" : self.model,
@@ -48,17 +33,35 @@ class Arguments():
                         "no_alpha" : self.no_alpha,
                     "no_residuals" : self.no_residuals,
                             "imgs" : self.path,
-                      "model_name" : self.model,
-                          "epochs" : self.epochs,
-                              "lr" : self.lr,
-                              "wd" : self.wd,
-                         "epsilon" : self.epsilon,
-                          "device" : self.device
+                      "model_name" : self.model
         }
 
     def __contains__(self, key):
         return key in self.dictionary
 
+
+class Arguments():
+    def __init__(self):
+        # Data parameters
+        self.data_path : str
+        self.keyframes_path : str
+
+        # Training parameters
+        self.device : str
+        self.epochs : int
+        self.lr : float
+        self.wd : float
+        self.epsilon : float
+        self.batch_size : int
+        self.sequence_length : int
+        self.load_file : str
+        self.save_file : str
+        self.weight_decay : bool        
+
+    @classmethod
+    def get_arguments(cls):
+        args = yaml.load(open("config.yaml", "r"), yaml.Loader)
+        return args
 
 
 def log(*messages):

@@ -2,7 +2,7 @@ from tokenize import String
 from xmlrpc.client import Boolean
 import torch
 from GMA.core.network import RAFTGMA
-from helpers import Arguments, log, transform, matrix2euler
+from helpers import GMA_Parameters, Arguments, log, transform, matrix2euler
 from odometry.clvo import CLVO
 from localization.localization import MappingVAE
 from slam_framework.frame import Frame
@@ -20,14 +20,15 @@ class NeuralSLAM():
     The NeuralSLAM class is the implementation of the Deep Neural SLAM architecture
     """
 
-    def __init__(self, keyframes_base_path : str, preprocessed_flow: Boolean = False, start_mode: String = None) -> None:
+    def __init__(self, args : Arguments, preprocessed_flow: Boolean = False, start_mode: String = None) -> None:
         """
         keyframes_base_path: The path to save keyframes to, given as a string.
         """
 
         # General arguments object, keyframe saving path and SLAM mode
-        self.__args = Arguments()
-        self.__keyframes_base_path = keyframes_base_path # TODO checking existance
+        self.__gma_parameters = GMA_Parameters()
+        self.__args = args
+        self.__keyframes_base_path = args.keyframes_path # TODO checking existance
 
         # Normalization parameters
         self.__rgb_mean = torch.load("normalization_cache/rgb_mean.pth").unsqueeze(-1).unsqueeze(-1).unsqueeze(0).to(self.__args.device)
@@ -36,13 +37,13 @@ class NeuralSLAM():
         self.__flows_std = torch.load("normalization_cache/flow_std.pth").unsqueeze(-1).unsqueeze(-1).unsqueeze(0).to(self.__args.device)
         
         # Creating model and loading weights for optical flow network
-        self.__flow_net = torch.nn.DataParallel(RAFTGMA(self.__args), device_ids=[1])
-        self.__flow_net.load_state_dict(torch.load(self.__args.model))
+        self.__flow_net = torch.nn.DataParallel(RAFTGMA(self.__gma_parameters), device_ids=[0])
+        self.__flow_net.load_state_dict(torch.load(self.__gma_parameters.model))
         self.__flow_net.eval()
         
         # Creating model and loading weights for odometry estimator
-        self.__odometry_net = CLVO(args=self.__args).to(self.__args.device)
-        self.__odometry_net.load_state_dict(torch.load("odometry/clvo_final_adam_3.pth"))
+        self.__odometry_net = CLVO(args=self.__gma_parameters).to(self.__args.device)
+        self.__odometry_net.load_state_dict(torch.load("odometry/clvo_final_adam_3.pth", map_location=self.__args.device))
         self.__odometry_net.eval()
 
         # Property for mapping net
@@ -64,8 +65,8 @@ class NeuralSLAM():
 
         # Startup for relocalization only
         if start_mode == "mapping":
-            poses = torch.load(keyframes_base_path + "/poses.pth")
-            files = sorted(glob.glob(keyframes_base_path+"/rgb/*"))
+            poses = torch.load(self.__args.keyframes_path + "/poses.pth")
+            files = sorted(glob.glob(self.__args.keyframes_path + "/rgb/*"))
             log("Loading keyframes")
             for i in range(len(files)):
                 self.__keyframes.append(Frame(files[i], 
@@ -84,8 +85,8 @@ class NeuralSLAM():
         elif start_mode == "relocalization":
             self.__mapping_net = MappingVAE().to(self.__args.device).eval()
             self.__mapping_net.load_state_dict(torch.load(self.__keyframes_base_path + "/MappingVAE_weights.pth"))
-            poses = torch.load(keyframes_base_path + "/poses.pth")
-            files = sorted(glob.glob(keyframes_base_path+"/rgb/*"))
+            poses = torch.load(self.__args.keyframes_path + "/poses.pth")
+            files = sorted(glob.glob(self.__args.keyframes_path + "/rgb/*"))
             
             log("Loading keyframes")
             for i in range(len(files)):
@@ -106,12 +107,12 @@ class NeuralSLAM():
             self.__mode = "relocalization"
             
         else:
-            if not os.path.exists(keyframes_base_path):
-                os.mkdir(keyframes_base_path)
-            if not os.path.exists(os.path.join(keyframes_base_path, "rgb")):
-                os.mkdir(os.path.join(keyframes_base_path, "rgb"))
+            if not os.path.exists(self.__args.keyframes_path):
+                os.mkdir(self.__args.keyframes_path)
+            if not os.path.exists(os.path.join(self.__args.keyframes_path, "rgb")):
+                os.mkdir(os.path.join(self.__args.keyframes_path, "rgb"))
             else:
-                files = glob.glob(keyframes_base_path+"/rgb/*")
+                files = glob.glob(self.__args.keyframes_path + "/rgb/*")
                 
                 for file in files:
                     os.remove(file)

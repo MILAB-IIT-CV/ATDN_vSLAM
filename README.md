@@ -28,7 +28,8 @@ In the following there is a detailed example of how to use the SLAM. A Jupyter n
  !!python/object:__main__.Arguments {
   batch_size: 16, 
   data_path: path/to/dataset, 
-  device: 'cuda:1',
+  keyframes_path: path/to/keyframes,
+  device: 'cuda:0',
   epochs: 10, 
   epsilon: 1.0e-08, 
   load_file: odometry/clvo_last4_0.pth, 
@@ -55,14 +56,12 @@ import matplotlib as mpl
 mpl.rcParams['figure.dpi'] = 100
 
 
-args = Arguments()
+args = Arguments.get_arguments()
 sequence_length = 1
 preprocessed_flow = True
-dataset = KittiOdometryDataset(args.data_path, "00", precomputed_flow=preprocessed_flow, sequence_length=sequence_length)
 
-# TODO change to actual data path
-data_path = "path/to/data"
-slam = NeuralSLAM(data_path, preprocessed_flow=preprocessed_flow)
+dataset = KittiOdometryDataset(args.data_path, "00", precomputed_flow=preprocessed_flow, sequence_length=sequence_length)
+slam = NeuralSLAM(args, preprocessed_flow=preprocessed_flow)
 ```
 
 ### After that, SLAM mode can be changed from idle to odometry. Actual SLAM mode can be accessed through the mode() methodd
@@ -111,7 +110,8 @@ slam.end_odometry()
 
 ```python
 import matplotlib.pyplot as plt
-poses = torch.load(data_path+"/poses.pth")
+DATA_PATH = args.keyframes_path + "/poses.pth"
+poses = torch.load(DATA_PATH)
 print(poses.shape)
 X = poses[:, 3]
 Z = poses[:, -1]
@@ -123,8 +123,13 @@ plt.show()
 ### After the mapping relocalization can be done by calling the SLAM object with the image to search
 
 ```python
-DATA_PATH = None # TODO Change to config file data read
-dataset = MappingDataset(DATA_PATH, slam=True)
+from localization.localization_dataset import MappingDataset, KittiLocalizationDataset
+from GMA.core.utils.utils import InputPadder
+from helpers import log, matrix2euler
+import matplotlib as mpl
+mpl.rcParams['figure.dpi'] = 100
+
+dataset = MappingDataset(args.keyframes_path, slam=True)
 rgb_mean = torch.load("normalization_cache/rgb_mean.pth").unsqueeze(-1).unsqueeze(-1).unsqueeze(0)
 rgb_std = torch.load("normalization_cache/rgb_std.pth").unsqueeze(-1).unsqueeze(-1).unsqueeze(0)
 
@@ -139,6 +144,38 @@ im_normalized = (rgb.unsqueeze(0)-rgb_mean)/rgb_std
 
 with torch.no_grad():
     initial_pose, refined_pose, distances = slam(im_normalized)
+    #log("Distances shape", distances.shape)
+
+    max_dist = torch.max(distances).cpu().numpy()
+    bins = 1000
+
+    [hist, bin_edges] = np.histogram(distances.cpu().numpy(), bins=bins)
+
+    # ---------
+    # Histogram
+    # ---------
+
+    plt.bar(bin_edges[:-1], hist, width=5)
+    plt.xlabel("Distance from sample")
+    plt.ylabel("Count of elements")
+    plt.show()
+
+    # Predicted index
+    distances_mean = distances.mean()
+    pred_index = torch.argmin(distances)
+    second_pred_index = torch.argmin(distances)
+
+    plt.plot(distances.cpu().numpy())
+    plt.xlabel("Index of keyframe")
+    plt.ylabel("Embedding distance from sample")
+    plt.show()
+
+def prepare_im(im):
+    return im.detach().byte().squeeze().permute(1, 2, 0).numpy()
+
+
+pred_im, _, _ = dataset[int(pred_index.squeeze())]
+second_pred_im, _, _ = dataset[int(second_pred_index.squeeze())]
 
 def to_vectors(mat):
     abs_rotation = mat[:3, :3]

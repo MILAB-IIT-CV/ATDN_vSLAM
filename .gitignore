@@ -1,1 +1,10 @@
 config.yaml
+/.venv
+tests.ipynb
+/__pycache__
+/GMA
+/einops
+/odometry/__pycache__
+/general_layers/__pycache__
+/localization/__pycache__
+/slam_framework/__pycache__
