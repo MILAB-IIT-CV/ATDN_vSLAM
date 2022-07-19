@@ -16,7 +16,7 @@ import math
 torch.manual_seed(4265664478)
 
 # Instantiating arguments object for optical flow module
-args = Arguments()
+args = Arguments.get_arguments()
 
 # Instantiating dataset and dataloader
 batch_size = args.batch_size
