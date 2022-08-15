@@ -4,10 +4,10 @@ from helpers import euler2matrix, matrix2euler
 
 class CLVO_Loss():
 
-    def __init__(self):
+    def __init__(self, alpha=1):
         self.last_com = 0
         self.stage = 0
-        self.alpha = 0.3
+        self.alpha = alpha
         self.delta = 1
         self.khi = 100
 
