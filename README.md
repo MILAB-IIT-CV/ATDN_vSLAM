@@ -36,8 +36,19 @@ In the following there is a detailed example of how to use the SLAM. A Jupyter n
   lr: 0.001, 
   save_file: odometry/clvo_last4_1.pth,
   sequence_length: 4, 
-  wd: 0.0001, 
-  weight_decay: false
+  wd: 0.0001,
+  train_sequences:
+- '00'
+- '01'
+- '02'
+- '03'
+- '04'
+- '06'
+- '08'
+- '09'
+- '10' 
+  weight_decay: false,
+  alpha: 1.0
 }
  ```
 

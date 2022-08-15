@@ -10,3 +10,4 @@ tests.ipynb
 /slam_framework/__pycache__
 Unet_sigmaloss.png
 generate_flow.py
+loss_log/*

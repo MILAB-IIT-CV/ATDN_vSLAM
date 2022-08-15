@@ -56,7 +56,8 @@ class Arguments():
         self.sequence_length : int
         self.load_file : str
         self.save_file : str
-        self.weight_decay : bool        
+        self.weight_decay : bool
+        self.train_sequences : list    
 
     @classmethod
     def get_arguments(cls):
@@ -174,3 +175,18 @@ def rel2abs(rotations, translations):
     global_pos = global_scale[:, :3, -1]
     
     return global_pos
+
+
+def get_normalization_cache(args):
+    im_mean = torch.load("normalization_cache/rgb_mean.pth").unsqueeze(-1).unsqueeze(-1).unsqueeze(0).to(args.device)
+    im_std = torch.load("normalization_cache/rgb_std.pth").unsqueeze(-1).unsqueeze(-1).unsqueeze(0).to(args.device)
+    flows_mean = torch.load("normalization_cache/flow_mean.pth").unsqueeze(-1).unsqueeze(-1).unsqueeze(0).to(args.device)
+    flows_std = torch.load("normalization_cache/flow_std.pth").unsqueeze(-1).unsqueeze(-1).unsqueeze(0).to(args.device)
+
+    print("RGBs mean: ", im_mean.squeeze())
+    print("RGBs Std: ", im_std.squeeze())
+
+    print("Flows mean: ", flows_mean.squeeze())
+    print("Flows std: ", flows_std.squeeze())
+
+    return [im_mean, im_std, flows_mean, flows_std]
