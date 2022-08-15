@@ -1,5 +1,3 @@
-from re import M
-
 from GMA.core.network import RAFTGMA
 import torch
 from torch import nn
