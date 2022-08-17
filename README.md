@@ -25,19 +25,19 @@ In the following there is a detailed example of how to use the SLAM. A Jupyter n
 
  Before using the SLAM, a .yaml config file is required for the Arguments object creation. Here is an example how config.yaml should look like:
  ```yaml
- !!python/object:__main__.Arguments {
-  batch_size: 16, 
-  data_path: path/to/dataset, 
-  keyframes_path: path/to/keyframes,
-  device: 'cuda:0',
-  epochs: 10, 
-  epsilon: 1.0e-08, 
-  load_file: odometry/clvo_last4_0.pth, 
-  lr: 0.001, 
-  save_file: odometry/clvo_last4_1.pth,
-  sequence_length: 4, 
-  wd: 0.0001,
-  train_sequences:
+!!python/object:__main__.Arguments
+batch_size: 16
+data_path: path/to/dataset
+keyframes_path: path/to/keyframes
+device: 'cuda:0'
+epochs: 10,
+epsilon: 1.0e-08
+load_file: odometry/clvo_last4_0.pth,
+lr: 0.001
+save_file: odometry/clvo_last4_1.pth
+sequence_length: 4
+wd: 0.0001
+train_sequences:
 - '00'
 - '01'
 - '02'
@@ -47,9 +47,10 @@ In the following there is a detailed example of how to use the SLAM. A Jupyter n
 - '08'
 - '09'
 - '10' 
-  weight_decay: false,
-  alpha: 1.0
-}
+weight_decay: false
+alpha: 1.0
+precomputed_flow: true
+
  ```
 
 ### Imports, dataset, arguments object and SLAM instantiation.
@@ -68,11 +69,13 @@ mpl.rcParams['figure.dpi'] = 100
 
 
 args = Arguments.get_arguments()
-sequence_length = 1
-preprocessed_flow = True
 
-dataset = KittiOdometryDataset(args.data_path, "00", precomputed_flow=preprocessed_flow, sequence_length=sequence_length)
-slam = NeuralSLAM(args, preprocessed_flow=preprocessed_flow)
+dataset = KittiOdometryDataset(args.data_path, 
+                               "00", 
+                               precomputed_flow=args.precomputed_flow, 
+                               sequence_length=args.sequence_length)
+
+slam = NeuralSLAM(args)
 ```
 
 ### After that, SLAM mode can be changed from idle to odometry. Actual SLAM mode can be accessed through the mode() methodd
@@ -89,7 +92,7 @@ global_scale = []
 count = 0
 slam_call_time = []
 for i in range(0, len(dataset), sequence_length):
-    if preprocessed_flow:
+    if args.precomputed_flows:
         img1, img2, flow, _, __ = dataset[i]
         start = time.time()
         current_pose = slam(img1.squeeze(), img2.squeeze(), flow.squeeze())

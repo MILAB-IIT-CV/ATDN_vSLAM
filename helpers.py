@@ -57,11 +57,12 @@ class Arguments():
         self.load_file : str
         self.save_file : str
         self.weight_decay : bool
-        self.train_sequences : list    
+        self.train_sequences : list
+        self.precomputed_flow: bool
 
     @classmethod
-    def get_arguments(cls):
-        args = yaml.load(open("config.yaml", "r"), yaml.Loader)
+    def get_arguments(cls, config_path="config.yaml"):
+        args = yaml.load(open(config_path, "r"), yaml.Loader)
         return args
 
 

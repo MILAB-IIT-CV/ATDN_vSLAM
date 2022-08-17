@@ -20,7 +20,7 @@ class NeuralSLAM():
     The NeuralSLAM class is the implementation of the Deep Neural SLAM architecture
     """
 
-    def __init__(self, args : Arguments, preprocessed_flow: Boolean = False, start_mode: String = None) -> None:
+    def __init__(self, args : Arguments, start_mode: String = None) -> None:
         """
         keyframes_base_path: The path to save keyframes to, given as a string.
         """
@@ -61,7 +61,7 @@ class NeuralSLAM():
         self.__rotation_threshold = (rot_threshold_deg/180)*torch.pi
         self.__translation_threshold = 15
 
-        self.__preprocessed_flow = preprocessed_flow
+        self.__precomputed_flow = args.precomputed_flow
 
         # Startup for relocalization only
         if start_mode == "mapping":
@@ -189,7 +189,7 @@ class NeuralSLAM():
         # Call functionality in odometry mode
             # Extracting images from input arguments
             with torch.no_grad():
-                if not self.__preprocessed_flow:
+                if not self.__precomputed_flow:
                     im1, im2 = args[0], args[1]
                     # Preprocessing of images: unused dimension reduction, transfer to processing device, padding
                     im1, im2 = im1.to(self.__args.device), im2.to(self.__args.device)
