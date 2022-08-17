@@ -81,7 +81,8 @@ def main():
     model = CLVO(args, precomputed_flows=True, in_channels=8).to(args.device)
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     log("Trainable parameters:", trainable_params)
-    #model.load_state_dict(torch.load("odometry/clvo_final_adam_2.pth", map_location=args.device))
+    log("Loading weigths from ", args.load_file)
+    model.load_state_dict(torch.load(args.load_file, map_location=args.device))
 
     aug = transforms.Compose([
         transforms.ColorJitter(brightness=0.05, saturation=0.05, hue=0.0001)
@@ -116,11 +117,11 @@ def main():
               aug, 
               log_vals_actual)
 
-        #log("Saving loss log")
-        #np.savetxt('loss_log/final_adam_3_'+str(epoch)+'.txt', np.array(log_vals_actual))
-        #log("Saving model as last")
-        #torch.save(model.state_dict(), "odometry/clvo_final_adam_3.pth")
+        log("Saving loss log")
+        np.savetxt('loss_log/generalization_0'+str(epoch)+'.txt', np.array(log_vals_actual))
+        log("Saving model as ", args.save_file)
+        torch.save(model.state_dict(), args.save_file)
 
 
-# Calling train main method
+# Calling main training method
 main()

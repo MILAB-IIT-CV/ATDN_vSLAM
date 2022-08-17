@@ -11,3 +11,4 @@ tests.ipynb
 Unet_sigmaloss.png
 generate_flow.py
 loss_log/*
+training_log.md
