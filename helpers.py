@@ -1,92 +1,16 @@
 import sys, os
 sys.path.insert(0, os.path.abspath(".."))
 import torch
-import yaml
 
 
-class GMA_Parameters():
-    def __init__(self):
+class LogShape(torch.nn.Module):
+    def __init__(self, message) -> None:
+        super(LogShape, self).__init__()
+        self.message = message
 
-        # GMA parameters
-        self.model = "GMA/checkpoints/gma-kitti.pth"
-        self.dataset = "kitti"
-        self.iters = 12
-        self.num_heads = 1
-        self.position_only = False
-        self.position_and_content = False
-        self.mixed_precision = True
-        self.replace = False
-        self.no_alpha = False
-        self.no_residuals = False
-        self.model_name = self.model
-        self.path = "imgs"       
-        
-        self.dictionary = {
-                           "model" : self.model,
-                         "dataset" : self.dataset, 
-                           "iters" : self.iters, 
-                       "num_heads" : self.num_heads, 
-                   "position_only" : self.position_only, 
-            "position_and_content" : self.position_and_content, 
-                 "mixed_precision" : self.mixed_precision,
-                         "replace" : self.replace,
-                        "no_alpha" : self.no_alpha,
-                    "no_residuals" : self.no_residuals,
-                            "imgs" : self.path,
-                      "model_name" : self.model
-        }
-
-    def __contains__(self, key):
-        return key in self.dictionary
-
-
-class Arguments():
-    def __init__(self):
-        # Data parameters
-        self.data_path : str
-        self.keyframes_path : str
-
-        # Training parameters
-        self.device : str
-        self.epochs : int
-        self.lr : float
-        self.wd : float
-        self.epsilon : float
-        self.batch_size : int
-        self.sequence_length : int
-        self.load_file : str
-        self.save_file : str
-        self.weight_decay : bool
-        self.train_sequences : list
-        self.precomputed_flow: bool
-
-    @classmethod
-    def get_arguments(cls, config_path="config.yaml"):
-        args = yaml.load(open(config_path, "r"), yaml.Loader)
-        return args
-
-
-def log(*messages):
-
-    messages = [str(message) for message in messages]
-    message = messages[0]
-
-    for msg in messages[1:]:
-        message = message + ' ' + msg
-
-    msg_len = len(message)
-    print(msg_len*'-')
-    print(message)
-    print(msg_len*'-')
-
-
-class LossLogger():
-    def __init__(self, data_num) -> None:
-        self.data_num = data_num
-        self.count = 0
-
-    def log_loss(self, loss):
-        pass
+    def forward(self, input):
+        log(self.message+" shape: ", input.shape)
+        return input.shape
 
 
 class BetaScheduler():
@@ -111,9 +35,38 @@ class BetaScheduler():
         return self.beta
 
 
+def log(*messages):
+    messages = [str(message) for message in messages]
+    message = messages[0]
+
+    for msg in messages[1:]:
+        message = message + ' ' + msg
+
+    msg_len = len(message)
+    print(msg_len*'-')
+    print(message)
+    print(msg_len*'-')
+
+
+def line2matrix(pose):
+    matrix = torch.stack([pose[0:4], pose[4:8], pose[8:12]], dim=0)
+    matrix = torch.cat([matrix, torch.tensor([[0, 0, 0, 1]])], dim=0)
+
+    return matrix
+
+
+def matrix2line(matrix):
+    # TODO: Test function
+    pose = torch.cat([matrix[0], matrix[1], matrix[2]], dim=0)
+
+    return pose
+
+
+def convert_to_KITTI_format(rotations_array, translations_array):
+    raise NotImplementedError()
+
 
 def euler2matrix(r, convention="yxz", device="cuda"):
-
     c1 = torch.cos(r[0])
     c2 = torch.cos(r[1])
     c3 = torch.cos(r[2])
@@ -139,7 +92,6 @@ def euler2matrix(r, convention="yxz", device="cuda"):
 
 
 def matrix2euler(R, convention="yxz"):
-  
     if convention == "yxz":
         alpha = torch.atan2(R[0, 2], R[2, 2])
         beta = torch.atan2(-R[1, 2], torch.sqrt(1-R[1, 2]**2))
