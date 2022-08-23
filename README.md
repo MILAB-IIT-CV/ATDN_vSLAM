@@ -25,18 +25,19 @@ In the following there is a detailed example of how to use the SLAM. A Jupyter n
 
  Before using the SLAM, a .yaml config file is required for the Arguments object creation. Here is an example how config.yaml should look like:
  ```yaml
-!!python/object:__main__.Arguments
-batch_size: 16
-data_path: path/to/dataset
-keyframes_path: path/to/keyframes
-device: 'cuda:0'
-epochs: 10,
+!!python/object:arguments.Arguments
+alpha: 0.3
+batch_size: 8
+data_path: /path/to/dataset
+device: cuda:0
+epochs: 2
 epsilon: 1.0e-08
-load_file: odometry/clvo_last4_0.pth,
+keyframes_path: /path/to/keyframes
+weight_file: odometry/clvo_general_
+log_file: loss_log/generalization_
 lr: 0.001
-save_file: odometry/clvo_last4_1.pth
-sequence_length: 4
-wd: 0.0001
+stage: 6
+sequence_length: 8
 train_sequences:
 - '00'
 - '01'
@@ -46,10 +47,11 @@ train_sequences:
 - '06'
 - '08'
 - '09'
-- '10' 
+- '10'
+wd: 0.0001
 weight_decay: false
-alpha: 1.0
 precomputed_flow: true
+w : 3
 
  ```
 
