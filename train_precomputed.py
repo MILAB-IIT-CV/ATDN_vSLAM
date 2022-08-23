@@ -9,7 +9,8 @@ from odometry.vo_loss import CLVO_Loss
 from odometry.vo_datasets import CustomKittiOdometryDataset
 from odometry.vo_dataloader import CustomKITTIDataLoader
 from odometry.clvo import CLVO
-from helpers import log, Arguments, get_normalization_cache
+from helpers import log, get_normalization_cache
+from arguments import Arguments
 import numpy as np
 import math
 
@@ -81,8 +82,9 @@ def main():
     model = CLVO(args, precomputed_flows=True, in_channels=8).to(args.device)
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     log("Trainable parameters:", trainable_params)
-    log("Loading weigths from ", args.load_file)
-    model.load_state_dict(torch.load(args.load_file, map_location=args.device))
+    #load_path = args.weight_file+str(args.stage-1)+".pth"
+    #log("Loading weigths from ", load_path)
+    #model.load_state_dict(torch.load(load_path, map_location=args.device))
 
     aug = transforms.Compose([
         transforms.ColorJitter(brightness=0.05, saturation=0.05, hue=0.0001)
@@ -96,9 +98,11 @@ def main():
                                                      math.floor(args.epochs*(len(dataset)-args.batch_size)/args.batch_size), 
                                                      eta_min=1e-6)
 
-    loss = CLVO_Loss(args.alpha)
+    loss = CLVO_Loss(args.alpha, w=args.w)
     aug = transforms.Compose([
-        transforms.ColorJitter(brightness=0.05, saturation=0.05, hue=0.01),
+        transforms.ColorJitter(brightness=0.05, 
+                               saturation=0.05, 
+                               hue=0.01),
     ])
 
     model.train()
@@ -118,9 +122,11 @@ def main():
               log_vals_actual)
 
         log("Saving loss log")
-        np.savetxt('loss_log/generalization_0'+str(epoch)+'.txt', np.array(log_vals_actual))
-        log("Saving model as ", args.save_file)
-        torch.save(model.state_dict(), args.save_file)
+        log_path = args.log_file+str(args.stage-1)+"_"+str(epoch)+".txt"
+        np.savetxt(log_path, np.array(log_vals_actual))
+        save_path = (args.weight_file+str(args.stage)+".pth")
+        log("Saving model as ", save_path)
+        torch.save(model.state_dict(), save_path)
 
 
 # Calling main training method
