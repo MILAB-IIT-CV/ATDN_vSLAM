@@ -3,14 +3,11 @@ import glob
 import numpy as np
 import torch
 from torch.utils import data
-from scipy.spatial.transform import Rotation as R
 from GMA.core.utils.utils import InputPadder
 from torchvision.transforms import Resize
 import torchvision.io as io
 
-from helpers import log, matrix2euler
-
-import time
+from helpers import matrix2euler, line2matrix, log
 
 
 class OdometryDataset(data.Dataset):
@@ -20,12 +17,14 @@ class OdometryDataset(data.Dataset):
 
     def preprocess_poses_euler(self,  pose1, pose2):
         # Stacking the matrix rows stored in the lines of the array
-        pose1 = torch.from_numpy(np.array([pose1[0:4], pose1[4:8], pose1[8:12]]))
-        pose1 = torch.cat([pose1, torch.tensor([[0, 0, 0, 1]])], dim=0)
+        pose1 = line2matrix(pose1)
+        #pose1 = torch.from_numpy(np.array([pose1[0:4], pose1[4:8], pose1[8:12]]))
+        #pose1 = torch.cat([pose1, torch.tensor([[0, 0, 0, 1]])], dim=0)
         inverted1 = torch.inverse(pose1)
 
-        pose2 = torch.from_numpy(np.array([pose2[0:4], pose2[4:8], pose2[8:12]]))
-        pose2 = torch.cat([pose2, torch.tensor([[0, 0, 0, 1]])], dim=0)
+        pose2 = line2matrix(pose2)
+        #pose2 = torch.from_numpy(np.array([pose2[0:4], pose2[4:8], pose2[8:12]]))
+        #pose2 = torch.cat([pose2, torch.tensor([[0, 0, 0, 1]])], dim=0)
         
         delta_pose = torch.matmul(inverted1, pose2)
 
@@ -37,7 +36,6 @@ class OdometryDataset(data.Dataset):
 
         return [delta_rotation, delta_translation]
         
-
 
 class KittiOdometryDataset(OdometryDataset):
     def __init__(self, data_path, sequence, precomputed_flow=False, sequence_length=4, device='cuda'):
@@ -54,6 +52,7 @@ class KittiOdometryDataset(OdometryDataset):
         self.im_path = path.join(self.data_path, "sequences", sequence, "image_2")
         self.flow_path = path.join(self.data_path, "flows", sequence)
         self.poses = np.loadtxt(path.join(self.data_path, 'poses', self.sequence+'.txt'), dtype=np.double)
+        self.poses = torch.from_numpy(self.poses)
 
         im_file = "000000.png"
         img = io.read_image(path.join(self.im_path, im_file)).float()
@@ -119,7 +118,8 @@ class CustomKittiOdometryDataset(OdometryDataset):
             sequence_length = len(glob.glob(im_path+"/*.png"))-self.N
             self.sequence_lengths.append(self.sequence_lengths[-1]+sequence_length) 
             
-            self.sequence_poses.append(np.loadtxt(path.join(self.data_path, 'poses', sequence+'.txt'), dtype=np.double))
+            pose = np.loadtxt(path.join(self.data_path, 'poses', sequence+'.txt'), dtype=np.double)
+            self.sequence_poses.append(torch.from_numpy(pose))
 
         self.sequence_lengths = self.sequence_lengths[1:]
         assert len(sequences) == len(self.sequence_lengths), "Sequence lengths are not as many as sequences"
