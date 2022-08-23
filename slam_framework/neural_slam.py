@@ -1,18 +1,23 @@
-from tokenize import String
-from xmlrpc.client import Boolean
-import torch
-from GMA.core.network import RAFTGMA
-from helpers import GMA_Parameters, Arguments, log, transform, matrix2euler
-from odometry.clvo import CLVO
-from localization.localization import MappingVAE
-from slam_framework.frame import Frame
 import os
 import glob
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
-from localization.localization_dataset import MappingDataset
 import copy
 
+import torch
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
+
+from GMA.core.network import RAFTGMA
+
+from helpers import log, transform, matrix2euler
+from arguments import Arguments
+from gma_parameters import GMA_Parameters
+
+from odometry.clvo import CLVO
+
+from localization.localization import MappingVAE
+from localization.localization_dataset import MappingDataset
+
+from slam_framework.frame import Frame
 
 
 class NeuralSLAM():
@@ -20,7 +25,7 @@ class NeuralSLAM():
     The NeuralSLAM class is the implementation of the Deep Neural SLAM architecture
     """
 
-    def __init__(self, args : Arguments, start_mode: String = None) -> None:
+    def __init__(self, args : Arguments, start_mode: str = None) -> None:
         """
         keyframes_base_path: The path to save keyframes to, given as a string.
         """
@@ -155,7 +160,6 @@ class NeuralSLAM():
                 poses.append(pose)
             poses = torch.stack(poses, dim=0)
             torch.save(poses, self.__keyframes_base_path + "/poses.pth")
-
             
             log("Odometry ended, starting mapping process...")
             # Changing mode to mapping
@@ -262,13 +266,16 @@ class NeuralSLAM():
     def get_keyframe(self, index):
         return self.__keyframes[index]
 
+
     def __getitem__(self, index):
         return self.__keyframes[index]
+
 
     def __len__(self):
         return len(self.__keyframes)
 
-    def __decide_keyframe(self, pred_mat) -> Boolean:
+
+    def __decide_keyframe(self, pred_mat) -> bool:
         """
         Method to decide if current frame is to be registered as a keyframe
         """
@@ -299,7 +306,6 @@ class NeuralSLAM():
         # Creating model for mapping net
         target_shape = (dataset[0].shape[-2], dataset[0].shape[-1])
         self.__mapping_net = MappingVAE(target_size=target_shape).to(self.__args.device).train()
-
 
         rgb_mean = self.__rgb_mean
         rgb_sigma = self.__rgb_std
@@ -344,30 +350,33 @@ class NeuralSLAM():
         self.__mapping_net = self.__mapping_net.eval()
 
 
-
     def __relocalize_from_image(self, image):
         """
         Relocalization method
         """
 
-        # TODO get closest keyframe
         mu, logvar, latent, im_pred = self.__mapping_net(image, VAE=True)
 
-        distances = []
-        for i in range(len(self.__keyframes)):
-            distances.append(torch.norm((self.__keyframes[i].embedding-mu), p=2))
+        closest_keyframe, distances = self.__get_closest_keyframe(mu)
 
+        initial_pose = closest_keyframe.pose
 
-        distances = torch.stack(distances, dim=0)
-        pred_index = torch.argmin(distances)
-
-        initial_pose = self.__keyframes[pred_index].pose
-
-        pose_diff = self.__refine_localization(self.__keyframes[pred_index], image)
+        pose_diff = self.__refine_localization(closest_keyframe, image)
 
         refined_pose = torch.matmul(initial_pose, pose_diff)
 
         return initial_pose, refined_pose, distances
+
+
+    def __get_closest_keyframe(self, code):
+        distances = []
+        for i in range(len(self.__keyframes)):
+            distances.append(torch.norm((self.__keyframes[i].embedding-code), p=2))
+
+        distances = torch.stack(distances, dim=0)
+        pred_index = torch.argmin(distances)
+
+        return self.__keyframes[pred_index], distances
 
 
     def __refine_localization(self, closest_keyframe,  im_to_search):
