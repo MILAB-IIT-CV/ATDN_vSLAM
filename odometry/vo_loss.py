@@ -38,13 +38,11 @@ class CLVO_Loss():
         # -------------------
         # Composite pose loss
         # -------------------
-        log("W", w)
         L_com = []
         for i in range(len(pred_rot)):
             L_com.append(self.com_loss([pred_rot[i], pred_tr[i]], [true_rot[i], true_tr[i]], w=w, device=device))
         L_com = torch.stack(L_com, dim=0).sum(-1)
-        log("Com loss", L_com.shape)
-        #[:, -1].mean()
+        #log("Com loss", L_com.shape)
         #log("Com loss: ", L_com.shape)
         #L_com = L_com if L_com > self.last_com else 0
         
