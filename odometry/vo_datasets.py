@@ -18,21 +18,15 @@ class OdometryDataset(data.Dataset):
     def preprocess_poses_euler(self,  pose1, pose2):
         # Stacking the matrix rows stored in the lines of the array
         pose1 = line2matrix(pose1)
-        #pose1 = torch.from_numpy(np.array([pose1[0:4], pose1[4:8], pose1[8:12]]))
-        #pose1 = torch.cat([pose1, torch.tensor([[0, 0, 0, 1]])], dim=0)
         inverted1 = torch.inverse(pose1)
 
         pose2 = line2matrix(pose2)
-        #pose2 = torch.from_numpy(np.array([pose2[0:4], pose2[4:8], pose2[8:12]]))
-        #pose2 = torch.cat([pose2, torch.tensor([[0, 0, 0, 1]])], dim=0)
         
         delta_pose = torch.matmul(inverted1, pose2)
-
         delta_rot = delta_pose[:3, :3]
         delta_translation = delta_pose[:3, -1]
 
         delta_rotation = matrix2euler(delta_rot)
-
 
         return [delta_rotation, delta_translation]
         
