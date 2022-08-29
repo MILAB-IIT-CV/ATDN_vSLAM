@@ -59,6 +59,7 @@ class CLVO(nn.Module):
                             num_layers=4,
                             dropout=0.2,
                             batch_first=True)
+        self.lstm_states = (torch.zeros(4, 10,512).to('cuda'), torch.zeros(4, 10, 512).to('cuda'))
 
         # -------------------------
         # Odometry estimator module
@@ -78,27 +79,27 @@ class CLVO(nn.Module):
         # ------------------
         # Extracted features
         # ------------------
-        
         features = self.encoder_CNN(flows).unsqueeze(1)
         #log("Encoder out: ", features.shape)
 
         # ----------------------
         # Long Short Term Memory
         # ----------------------
-        
-        lstm_out, (hn, cn) = self.lstm(features)
+        lstm_out, self.lstm_states = self.lstm(features, self.lstm_states)
         lstm_out = lstm_out.squeeze()
         #log("LSTM out:", lstm_out.shape)
 
         # ----------------------------------
         # Odometry module translation branch
         # ----------------------------------
-
         translations = self.translation_regressor(lstm_out)
         rotations = self.rotation_regressor(lstm_out)
 
         return rotations, translations
 
+
+    def reset_lstm(self):
+        self.lstm_states = (torch.zeros(4, 10,512).to('cuda'), torch.zeros(4, 10, 512).to('cuda'))
 
 
 class Regressor_MLP(nn.Module):

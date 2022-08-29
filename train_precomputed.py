@@ -27,7 +27,7 @@ def train(args, normalization_cache, model, dataloader, odometry_loss, optimizer
         for j in range(args.sequence_length):
             imgs, flows, true_rotations, true_translations = images[:, j:j+2], fl[:, j], true_rot[:, j], true_tr[:, j]
             imgs = imgs.squeeze().to(args.device)
-            
+
             imgs = aug(imgs.byte()).float()
 
             imgs = (imgs-im_mean)/im_std
@@ -57,6 +57,7 @@ def train(args, normalization_cache, model, dataloader, odometry_loss, optimizer
         #loss = loss/batch_size
         log_vals.append(loss.item())
         loss.backward()
+        model.reset_lstm()
         
         optimizer.step()
         scheduler.step()
@@ -82,9 +83,10 @@ def main():
     model = CLVO(args, precomputed_flows=True, in_channels=8).to(args.device)
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     log("Trainable parameters:", trainable_params)
-    #load_path = args.weight_file+str(args.stage-1)+".pth"
-    #log("Loading weigths from ", load_path)
-    #model.load_state_dict(torch.load(load_path, map_location=args.device))
+    
+    load_path = args.weight_file+str(args.stage-1)+".pth"
+    log("Loading weigths from ", load_path)
+    model.load_state_dict(torch.load(load_path, map_location=args.device))
 
     aug = transforms.Compose([
         transforms.ColorJitter(brightness=0.05, saturation=0.05, hue=0.0001)
