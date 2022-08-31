@@ -9,14 +9,15 @@ from odometry.vo_loss import CLVO_Loss
 from odometry.vo_datasets import CustomKittiOdometryDataset
 from odometry.vo_dataloader import CustomKITTIDataLoader
 from odometry.clvo import CLVO
+from normalization_cache.normalization import NormalizationForKITTI
 from helpers import log, get_normalization_cache
 from arguments import Arguments
 import numpy as np
 import math
 
 
-def train(args, normalization_cache, model, dataloader, odometry_loss, optimizer, scheduler, aug, log_vals=[]):
-    im_mean, im_std, flows_mean, flows_std = normalization_cache
+def train(args, normalization, model, dataloader, odometry_loss, optimizer, scheduler, aug, log_vals=[]):
+    #im_mean, im_std, flows_mean, flows_std = normalization_cache
 
     for batch, (images, fl, true_rot, true_tr) in iter(dataloader):
 
@@ -30,10 +31,12 @@ def train(args, normalization_cache, model, dataloader, odometry_loss, optimizer
 
             imgs = aug(imgs.byte()).float()
 
-            imgs = (imgs-im_mean)/im_std
+            #imgs = (imgs-im_mean)/im_std
+            imgs = normalization.normalize_rgb(imgs)
 
             flows = flows.squeeze().to(args.device)
-            flows = (flows-flows_mean)/flows_std
+            #flows = (flows-flows_mean)/flows_std
+            flows = normalization.normalize_flow(flows)
             
             input_data = torch.cat([flows, imgs[:, 0], imgs[:, 1]], dim=1)
             #input_data = torch.cat([flows, img1], dim=1)
@@ -69,6 +72,9 @@ def train(args, normalization_cache, model, dataloader, odometry_loss, optimizer
 
 
 def main():
+    log("Odometry training")
+    print()
+
     # Setting random seed
     torch.manual_seed(4265664478)
     # Instantiating arguments object for optical flow module
@@ -78,7 +84,8 @@ def main():
     dataset = CustomKittiOdometryDataset(args.data_path, sequences=args.train_sequences, precomputed_flow=True, sequence_length=args.sequence_length)
     dataloader = CustomKITTIDataLoader(dataset=dataset, batch_size=args.batch_size)
 
-    normalization_cache = get_normalization_cache(args)
+    #normalization_cache = get_normalization_cache(args)
+    normalization = NormalizationForKITTI(args.device)
 
     model = CLVO(args, precomputed_flows=True, in_channels=8).to(args.device)
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -114,7 +121,7 @@ def main():
         log_vals_actual = []
         
         train(args,
-              normalization_cache,
+              normalization,
               model, 
               dataloader, 
               loss, 

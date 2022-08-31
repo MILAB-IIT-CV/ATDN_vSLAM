@@ -14,3 +14,5 @@ loss_log/*
 training_log.md
 LSTM_test.png
 odometry/clvo_generalization*
+normalization_cache/*2.pth
+normalization_test.png
