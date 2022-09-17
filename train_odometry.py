@@ -44,7 +44,7 @@ def train(args, normalization, model, dataloader, odometry_loss, optimizer, sche
 
             true_rotations = true_rotations.squeeze().to(args.device)
             true_translations = true_translations.squeeze().to(args.device)
-
+            
             pred_rotations, pred_translations = model(input_data)
             #loss = loss + odometry_loss([pred_rotations, pred_translations], [true_rotations, true_translations], device=args.device)
             rots.append(pred_rotations)
@@ -87,13 +87,13 @@ def main():
     #normalization_cache = get_normalization_cache(args)
     normalization = NormalizationForKITTI(args.device)
 
-    model = CLVO(args, precomputed_flows=True, in_channels=8).to(args.device)
+    model = CLVO(args.batch_size, precomputed_flows=True, in_channels=8).to(args.device)
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     log("Trainable parameters:", trainable_params)
     
-    load_path = args.weight_file+str(args.stage-1)+".pth"
-    log("Loading weigths from ", load_path)
-    model.load_state_dict(torch.load(load_path, map_location=args.device))
+    #load_path = args.weight_file+str(args.stage-1)+".pth"
+    #log("Loading weigths from ", load_path)
+    #model.load_state_dict(torch.load(load_path, map_location=args.device))
 
     aug = transforms.Compose([
         transforms.ColorJitter(brightness=0.05, saturation=0.05, hue=0.0001)
