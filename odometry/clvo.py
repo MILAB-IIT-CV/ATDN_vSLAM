@@ -7,13 +7,14 @@ from helpers import log
 
 
 class CLVO(nn.Module):
-    def __init__(self, args, precomputed_flows=False, in_channels=5):
+    def __init__(self, batch_size=1, precomputed_flows=False, in_channels=5):
         super(CLVO, self).__init__()
 
         # ------------------------------
         # Storing init object parameters
         # ------------------------------
-
+        
+        self.batch_size = batch_size
         self.precomputed_flows = precomputed_flows
         self.in_channels = in_channels
 
@@ -23,7 +24,7 @@ class CLVO(nn.Module):
         # ---------------------------------------
         # Advanced optical flow extractor network
         # ---------------------------------------
-
+        # TODO deprecate implicit use of optical flow network
         #if not self.precomputed_flows:
         #    self.raft_gma = RAFTGMA(args).to(args.device)
         #    weights = torch.load(args.model, map_location=args.device)
@@ -39,7 +40,7 @@ class CLVO(nn.Module):
         activation = nn.Mish
 
         self.encoder_CNN = nn.Sequential(
-            DownSample(in_channels=8, out_channels=16, kernel_size=[5, 5], stride=[1, 1], padding=2, activation=activation),
+            DownSample(in_channels=2, out_channels=16, kernel_size=[5, 5], stride=[1, 1], padding=2, activation=activation),
             DownSample(in_channels=16, out_channels=16, kernel_size=[5, 5], stride=[5, 5], padding=0, activation=activation),
             DownSample(in_channels=16, out_channels=16, kernel_size=[5, 5], stride=[5, 5], padding=0, activation=activation),
             DownSample(in_channels=16, out_channels=32, kernel_size=[3, 3], stride=[3, 3], padding=0, activation=activation),
@@ -54,12 +55,13 @@ class CLVO(nn.Module):
         # Blocks of the LSTM (Long Short Term Memory) module
         # --------------------------------------------------
 
-        self.lstm = nn.LSTM(input_size=1024,
-                            hidden_size=512,
-                            num_layers=4,
-                            dropout=0.2,
-                            batch_first=True)
-        self.lstm_states = (torch.zeros(4, 10,512).to('cuda'), torch.zeros(4, 10, 512).to('cuda'))
+        self.lstm = nn.LSTMCell(input_size=1024,
+                            hidden_size=512)
+                            #num_layers=4,
+                            #dropout=0.2,
+                            #batch_first=True)
+        #self.lstm_states = (torch.zeros(4, self.batch_size,512).to('cuda'), torch.zeros(4, self.batch_size, 512).to('cuda'))
+        self.lstm_states = (torch.zeros(self.batch_size,512).to('cuda'), torch.zeros(self.batch_size, 512).to('cuda'))
 
         # -------------------------
         # Odometry estimator module
@@ -79,14 +81,15 @@ class CLVO(nn.Module):
         # ------------------
         # Extracted features
         # ------------------
-        features = self.encoder_CNN(flows).unsqueeze(1)
+        features = self.encoder_CNN(flows)#.unsqueeze(1)
         #log("Encoder out: ", features.shape)
 
         # ----------------------
         # Long Short Term Memory
         # ----------------------
-        lstm_out, self.lstm_states = self.lstm(features, self.lstm_states)
-        lstm_out = lstm_out.squeeze()
+        self.lstm_states = self.lstm(features, self.lstm_states)
+        lstm_out = self.lstm_states[0]
+        #lstm_out = lstm_out.squeeze()
         #log("LSTM out:", lstm_out.shape)
 
         # ----------------------------------
@@ -99,7 +102,8 @@ class CLVO(nn.Module):
 
 
     def reset_lstm(self):
-        self.lstm_states = (torch.zeros(4, 10,512).to('cuda'), torch.zeros(4, 10, 512).to('cuda'))
+        self.lstm_states = (torch.zeros(self.batch_size,512).to('cuda'), torch.zeros(self.batch_size, 512).to('cuda'))
+        #self.lstm_states = (torch.zeros(4, self.batch_size,512).to('cuda'), torch.zeros(4, self.batch_size, 512).to('cuda'))
 
 
 class Regressor_MLP(nn.Module):
