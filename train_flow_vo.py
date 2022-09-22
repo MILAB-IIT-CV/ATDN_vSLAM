@@ -63,6 +63,7 @@ def main():
     torch.manual_seed(4265664478)
     # Instantiating arguments object for optical flow module
     args = Arguments.get_arguments()
+    log("Weight decay: ", args.wd)
 
     # Instantiating dataset and dataloader
     dataset = FlowKittiDataset(args.data_path, sequences=args.train_sequences, precomputed_flow=True, sequence_length=args.sequence_length)
@@ -79,24 +80,17 @@ def main():
     log("Loading weigths from ", load_path)
     model.load_state_dict(torch.load(load_path, map_location=args.device))
 
-    aug = transforms.Compose([
-        transforms.ColorJitter(brightness=0.05, saturation=0.05, hue=0.0001)
-    ])
 
-    #optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd, eps=args.epsilon)
+    optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd, eps=args.epsilon)
     #optimizer = optim.RAdam(model.parameters(), lr=args.lr,  weight_decay=args.wd)
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    #optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, 
                                                      math.floor(args.epochs*(len(dataset)-args.batch_size)/args.batch_size), 
                                                      eta_min=1e-6)
 
     loss = CLVO_Loss(args.alpha, w=args.w)
-    aug = transforms.Compose([
-        transforms.ColorJitter(brightness=0.05, 
-                               saturation=0.05, 
-                               hue=0.01),
-    ])
+
 
     model.train()
     print(" ============================================ ", "Training", " ============================================\n")
@@ -111,7 +105,7 @@ def main():
               loss, 
               optimizer, 
               scheduler, 
-              aug, 
+              None, 
               log_vals_actual)
 
         log("Saving loss log")
