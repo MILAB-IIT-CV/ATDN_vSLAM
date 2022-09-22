@@ -36,38 +36,19 @@ class TransposedConv(nn.Module):
         return self.conv(input)
 
 
-
 class ResidualConv(nn.Module):
-  def __init__(self, in_channels, out_channels, kernel_size, stride, padding, activation=nn.PReLU):
+  def __init__(self, in_channels, out_channels, kernel_size, stride, padding, activation=nn.Mish):
     super(ResidualConv, self).__init__()
 
-    self.conv = Conv(in_channels=in_channels, 
-                     out_channels=out_channels, 
-                     kernel_size=kernel_size, 
-                     stride=stride, 
-                     padding=padding, 
-                     activation=activation)
-
-
-    self.residual_line = nn.Sequential(
-        nn.Conv2d(in_channels=in_channels, 
-                  out_channels=out_channels, 
-                  kernel_size=1, 
-                  stride=stride, 
-                  padding=0),
-        nn.BatchNorm2d(num_features=out_channels)
+    self.conv = nn.Sequential(
+      Conv(in_channels=in_channels, out_channels=in_channels, kernel_size=3, stride=1, padding=1, activation=activation),
+      Conv(in_channels=in_channels, out_channels=out_channels, kernel_size=3, stride=1, padding=1, activation=activation)
     )
 
-    self.end_activation = activation(inplace=True)
-
   def forward(self, input):
-    
     x = self.conv(input)
-    shortcut = self.residual_line(input)    
-    x = self.end_activation(x + shortcut)
-
+    x = x+input
     return x
-
 
 
 class InterleaveUpscaling(nn.Module):
