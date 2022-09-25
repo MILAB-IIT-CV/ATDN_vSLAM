@@ -73,17 +73,18 @@ def main():
     normalization = NormalizationForKITTI(args.device)
 
     model = CLVO(args.batch_size, precomputed_flows=True, in_channels=8).to(args.device)
+
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     log("Trainable parameters:", trainable_params)
     
-    load_path = args.weight_file+str(args.stage-1)+".pth"
-    log("Loading weigths from ", load_path)
-    model.load_state_dict(torch.load(load_path, map_location=args.device))
+    #load_path = args.weight_file+str(args.stage-1)+".pth"
+    #log("Loading weigths from ", load_path)
+    #model.load_state_dict(torch.load(load_path, map_location=args.device))
 
 
-    optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd, eps=args.epsilon)
+    #optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd, eps=args.epsilon)
     #optimizer = optim.RAdam(model.parameters(), lr=args.lr,  weight_decay=args.wd)
-    #optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, 
                                                      math.floor(args.epochs*(len(dataset)-args.batch_size)/args.batch_size), 
