@@ -27,13 +27,8 @@ class CLVO_Loss():
         # -------------------
         # Relative pose loss
         # -------------------
-
         L_rel = 0
-        #for i in range(len(pred_rot)):
-        #L_rel = L_rel + self.transform_loss(pred_rot[i], pred_tr[i], true_rot[i], true_tr[i], device)
         L_rel = self.transform_loss(pred_rot, pred_tr, true_rot, true_tr, device).sum(-1)
-        #log("Rel loss1: ", L_rel.shape)
-        #L_rel = L_rel.mean()
 
         # -------------------
         # Composite pose loss
@@ -42,20 +37,10 @@ class CLVO_Loss():
         for i in range(len(pred_rot)):
             L_com.append(self.com_loss([pred_rot[i], pred_tr[i]], [true_rot[i], true_tr[i]], w=w, device=device))
         L_com = torch.stack(L_com, dim=0).sum(-1)
-        #log("Com loss", L_com.shape)
-        #log("Com loss: ", L_com.shape)
-        #L_com = L_com if L_com > self.last_com else 0
         
-        #if L_com > self.last_com:
-            #self.last_com = L_com #.item()
-        #else:
-            #self.last_com = L_com #.item()
-            #L_com = 0
-        #log(L_com)
         # ---------------
         # Total pose loss
         # ---------------
-
         L_total = self.alpha*L_rel+(1-self.alpha)*L_com
         return L_total.mean()
 
@@ -94,8 +79,8 @@ class CLVO_Loss():
         losses = []
         for j in range(len(pred_homogenous_array)-w):
             # Creating the combining the transformations to a 
-            pred_comm = pred_homogenous_array[0]
-            true_comm = true_homogenous_array[0]
+            pred_comm = pred_homogenous_array[j]
+            true_comm = true_homogenous_array[j]
             for i in range(j+1, j+w+1):
                 pred_comm = torch.matmul(pred_comm, pred_homogenous_array[i])
                 true_comm = torch.matmul(true_comm, true_homogenous_array[i])
