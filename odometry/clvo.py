@@ -45,9 +45,7 @@ class CLVO(nn.Module):
             Conv(in_channels=2, out_channels=4, kernel_size=7, stride=1),
             ResidualConv(in_channels=4, out_channels=8),
             ResidualConv(in_channels=8, out_channels=16, stride=2),
-            ResidualConv(in_channels=16, out_channels=32, stride=2),
-            ResidualConv(in_channels=32, out_channels=32, stride=2),
-            ResidualConv(in_channels=32, out_channels=32, stride=2)
+            ResidualConv(in_channels=16, out_channels=32, stride=2)
         )
 
         self.vit = ViT(in_channels=32, device="cuda")

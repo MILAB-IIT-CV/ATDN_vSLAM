@@ -17,3 +17,4 @@ odometry/clvo_generalization*
 normalization_cache/*2.pth
 normalization_test.png
 results.txt
+normalization_cache/__pycache__/normalization.cpython*
