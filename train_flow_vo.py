@@ -82,9 +82,9 @@ def main():
     #model.load_state_dict(torch.load(load_path, map_location=args.device))
 
 
-    optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd, eps=args.epsilon)
+    #optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd, eps=args.epsilon)
     #optimizer = optim.RAdam(model.parameters(), lr=args.lr,  weight_decay=args.wd)
-    #optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, 
                                                      math.floor(args.epochs*(len(dataset)-args.batch_size)/args.batch_size), 

@@ -54,16 +54,10 @@ class CLVO(nn.Module):
         # Blocks of the LSTM (Long Short Term Memory) module
         # --------------------------------------------------
         self.lstm_out_size = 256
-        self.lstm_t = nn.LSTMCell(input_size=256,
-                                  hidden_size=self.lstm_out_size)
+        self.lstm = nn.LSTMCell(input_size=256,
+                                hidden_size=self.lstm_out_size)
 
-        self.lstm_states_t = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
-                              torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'))
- 
-        self.lstm_r = nn.LSTMCell(input_size=256,
-                                  hidden_size=self.lstm_out_size)
-
-        self.lstm_states_r = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
+        self.lstm_states = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
                               torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'))
 
         # -------------------------
@@ -82,17 +76,14 @@ class CLVO(nn.Module):
         # ------------------
         features = self.encoder_CNN(flows)
         #log("Encoder out: ", features.shape)
-        vit_features = self.vit(features)
+        #vit_features = self.vit(features).mean(1)
         #log("VIT encoder out: ", vit_features.shape)
 
         # ----------------------
         # Long Short Term Memory
         # ----------------------
-        self.lstm_states_t = self.lstm_t(vit_features[:, 0, :], self.lstm_states_t)
-        lstm_out_t = self.lstm_states_t[0]
-        
-        self.lstm_states_r = self.lstm_r(vit_features[:, 1, :], self.lstm_states_r)
-        lstm_out_r = self.lstm_states_r[0]
+        self.lstm_states = self.lstm(features, self.lstm_states)
+        lstm_out = self.lstm_states[0]
         #lstm_out = lstm_out.squeeze()
         #log("LSTM out:", lstm_out.shape)
 
@@ -100,16 +91,14 @@ class CLVO(nn.Module):
         # Odometry module translation branch
         # ----------------------------------
         #log("MLP input shape", mlp_input.shape)
-        translations = self.translation_regressor(lstm_out_t)
-        rotations = self.rotation_regressor(lstm_out_r)
+        translations = self.translation_regressor(lstm_out)
+        rotations = self.rotation_regressor(lstm_out)
 
         return rotations, translations
 
 
     def reset_lstm(self):
-        self.lstm_states_t = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
-                            torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'))
-        self.lstm_states_r = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
+        self.lstm_states = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
                             torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'))
 
 
