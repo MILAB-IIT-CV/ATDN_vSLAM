@@ -25,7 +25,7 @@ class NeuralSLAM():
     The NeuralSLAM class is the implementation of the Deep Neural SLAM architecture
     """
 
-    def __init__(self, args : Arguments, start_mode: str = None) -> None:
+    def __init__(self, args : Arguments, odometry_weights : str = None, start_mode : str = None) -> None:
         """
         keyframes_base_path: The path to save keyframes to, given as a string.
         """
@@ -47,8 +47,8 @@ class NeuralSLAM():
         self.__flow_net.eval()
         
         # Creating model and loading weights for odometry estimator
-        self.__odometry_net = CLVO(args=self.__gma_parameters).to(self.__args.device)
-        self.__odometry_net.load_state_dict(torch.load("odometry/clvo_final_adam_3.pth", map_location=self.__args.device))
+        self.__odometry_net = CLVO(batch_size=args.batch_size).to(self.__args.device)
+        self.__odometry_net.load_state_dict(torch.load(odometry_weights, map_location=self.__args.device))
         self.__odometry_net.eval()
 
         # Property for mapping net
