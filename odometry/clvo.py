@@ -26,27 +26,20 @@ class CLVO(nn.Module):
 
         activation = nn.Mish
 
-        #self.encoder_CNN = nn.Sequential(
-        #    Conv(in_channels=self.in_channels, out_channels=16, kernel_size=[7, 7], stride=2, padding=3, activation=activation),
-        #    ResidualConv(in_channels=16, out_channels=16, stride=2),
-        #    ResidualConv(in_channels=16, out_channels=16, stride=2),
-        #    ResidualConv(in_channels=16, out_channels=16, stride=2),
-        #    ResidualConv(in_channels=16, out_channels=16, stride=2),
-        #    ResidualConv(in_channels=16, out_channels=16, stride=2),
-        #    nn.Flatten(),
-        #    nn.Linear(in_features=1920, out_features=1024),
-        #    nn.Dropout(0.2),
-        #    activation(inplace=True)
-        #)
-
         self.encoder_CNN = nn.Sequential(
             Conv(in_channels=self.in_channels, out_channels=16, kernel_size=[7, 7], stride=2, padding=3, activation=activation),
             ResidualConv(in_channels=16, out_channels=16, stride=2),
             ResidualConv(in_channels=16, out_channels=16, stride=2),
-            ResidualConv(in_channels=16, out_channels=16)
+            ResidualConv(in_channels=16, out_channels=16, stride=2),
+            ResidualConv(in_channels=16, out_channels=16, stride=2),
+            ResidualConv(in_channels=16, out_channels=16, stride=2),
+            nn.Flatten(),
+            nn.Linear(in_features=1920, out_features=1024),
+            nn.Dropout(0.2),
+            activation(inplace=True)
         )
 
-        self.vit = ViT(in_channels=32, device="cuda")
+        #self.vit = ViT(in_channels=16, device="cuda")
 
         # --------------------------------------------------
         # Blocks of the LSTM (Long Short Term Memory) module
@@ -74,7 +67,7 @@ class CLVO(nn.Module):
         # ------------------
         features = self.encoder_CNN(flows)
         #log("Encoder out: ", features.shape)
-        vit_features = self.vit(features)[:, :, :]
+        #vit_features = self.vit(features)[:, 0, :]
         #log("VIT encoder out: ", vit_features.shape)
 
         # ----------------------
