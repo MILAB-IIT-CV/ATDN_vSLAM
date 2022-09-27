@@ -17,6 +17,30 @@ class Conv(nn.Module):
         return self.bn(self.activation(self.conv(input)))
 
 
+class ResidualConv(nn.Module):
+  def __init__(self, in_channels, out_channels, stride=1, activation=nn.Mish):
+    super(ResidualConv, self).__init__()
+
+    self.conv = nn.Sequential(
+      Conv(in_channels=in_channels, out_channels=in_channels, kernel_size=3, stride=stride, padding=1, activation=activation),
+      Conv(in_channels=in_channels, out_channels=out_channels, kernel_size=3, stride=1, padding=1, activation=activation)
+    )
+
+    self.skip_layer = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=stride)
+
+    self.out_block = nn.Sequential(
+      nn.Mish(),
+      nn.BatchNorm2d(num_features=out_channels)
+    )
+
+  def forward(self, input):
+    x = self.conv(input)  
+    skip = self.skip_layer(input)
+    x = x + skip
+    
+    return self.out_block(x)
+
+
 class TransposedConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=(1, 1), padding=(0, 0), output_padding=(0, 0)) -> None:
         super(TransposedConv, self).__init__()
@@ -35,28 +59,6 @@ class TransposedConv(nn.Module):
 
     def forward(self, input):
         return self.conv(input)
-
-
-class ResidualConv(nn.Module):
-  def __init__(self, in_channels, out_channels, stride=1, activation=nn.Mish):
-    super(ResidualConv, self).__init__()
-
-    self.conv = nn.Sequential(
-      Conv(in_channels=in_channels, out_channels=in_channels, kernel_size=3, stride=stride, padding=1, activation=activation),
-      Conv(in_channels=in_channels, out_channels=out_channels, kernel_size=3, stride=1, padding=1, activation=activation)
-    )
-
-    self.skip_layer = nn.Sequential(
-          nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=stride),
-          nn.BatchNorm2d(out_channels)
-    )
-
-  def forward(self, input):
-    x = self.conv(input)  
-    skip = self.skip_layer(input)
-    x = x + skip
-    
-    return x
 
 
 class InterleaveUpscaling(nn.Module):

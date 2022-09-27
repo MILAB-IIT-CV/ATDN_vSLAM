@@ -1,4 +1,3 @@
-from GMA.core.network import RAFTGMA
 import torch
 from torch import nn
 from general_layers.conv import Conv, ResidualConv
@@ -8,7 +7,7 @@ from helpers import log
 
 
 class CLVO(nn.Module):
-    def __init__(self, batch_size=1, precomputed_flows=False, in_channels=5):
+    def __init__(self, batch_size=1, in_channels=2):
         super(CLVO, self).__init__()
 
         # ------------------------------
@@ -16,7 +15,6 @@ class CLVO(nn.Module):
         # ------------------------------
         
         self.batch_size = batch_size
-        self.precomputed_flows = precomputed_flows
         self.in_channels = in_channels
 
         self.activation = nn.PReLU
@@ -26,26 +24,26 @@ class CLVO(nn.Module):
         # Feature extractor encoder module for the LSTM module
         # ----------------------------------------------------
 
-        DownSample = Conv
         activation = nn.Mish
 
         #self.encoder_CNN = nn.Sequential(
-        #    DownSample(in_channels=2, out_channels=16, kernel_size=[5, 5], stride=[1, 1], padding=2, activation=activation),
-        #    DownSample(in_channels=16, out_channels=16, kernel_size=[5, 5], stride=[5, 5], padding=0, activation=activation),
-        #    DownSample(in_channels=16, out_channels=16, kernel_size=[5, 5], stride=[5, 5], padding=0, activation=activation),
-        #    DownSample(in_channels=16, out_channels=32, kernel_size=[3, 3], stride=[3, 3], padding=0, activation=activation),
-        #    DownSample(in_channels=32, out_channels=32, kernel_size=[3, 3], stride=[1, 1], padding=0, activation=activation),
+        #    Conv(in_channels=self.in_channels, out_channels=16, kernel_size=[7, 7], stride=2, padding=3, activation=activation),
+        #    ResidualConv(in_channels=16, out_channels=16, stride=2),
+        #    ResidualConv(in_channels=16, out_channels=16, stride=2),
+        #    ResidualConv(in_channels=16, out_channels=16, stride=2),
+        #    ResidualConv(in_channels=16, out_channels=16, stride=2),
+        #    ResidualConv(in_channels=16, out_channels=16, stride=2),
         #    nn.Flatten(),
-        #    nn.Linear(in_features=1344, out_features=1024),
+        #    nn.Linear(in_features=1920, out_features=1024),
         #    nn.Dropout(0.2),
         #    activation(inplace=True)
         #)
 
         self.encoder_CNN = nn.Sequential(
-            Conv(in_channels=2, out_channels=4, kernel_size=7, stride=1),
-            ResidualConv(in_channels=4, out_channels=8),
-            ResidualConv(in_channels=8, out_channels=16, stride=2),
-            ResidualConv(in_channels=16, out_channels=32, stride=2)
+            Conv(in_channels=self.in_channels, out_channels=16, kernel_size=[7, 7], stride=2, padding=3, activation=activation),
+            ResidualConv(in_channels=16, out_channels=16, stride=2),
+            ResidualConv(in_channels=16, out_channels=16, stride=2),
+            ResidualConv(in_channels=16, out_channels=16)
         )
 
         self.vit = ViT(in_channels=32, device="cuda")
@@ -53,8 +51,8 @@ class CLVO(nn.Module):
         # --------------------------------------------------
         # Blocks of the LSTM (Long Short Term Memory) module
         # --------------------------------------------------
-        self.lstm_out_size = 256
-        self.lstm = nn.LSTMCell(input_size=256,
+        self.lstm_out_size = 512
+        self.lstm = nn.LSTMCell(input_size=1024,
                                 hidden_size=self.lstm_out_size)
 
         self.lstm_states = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
@@ -76,7 +74,7 @@ class CLVO(nn.Module):
         # ------------------
         features = self.encoder_CNN(flows)
         #log("Encoder out: ", features.shape)
-        #vit_features = self.vit(features).mean(1)
+        vit_features = self.vit(features)[:, :, :]
         #log("VIT encoder out: ", vit_features.shape)
 
         # ----------------------
