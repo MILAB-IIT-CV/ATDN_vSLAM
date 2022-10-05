@@ -10,8 +10,8 @@ from odometry.vo_datasets import CustomKittiOdometryDataset
 from odometry.vo_dataloader import CustomKITTIDataLoader
 from odometry.clvo import CLVO
 from normalization_cache.normalization import NormalizationForKITTI
-from helpers import log, get_normalization_cache
-from arguments import Arguments
+from utils.helpers import log, get_normalization_cache
+from utils.arguments import Arguments
 import numpy as np
 import math
 

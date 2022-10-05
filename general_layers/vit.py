@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from helpers import log
+from utils.helpers import log
 from general_layers.conv import Conv
 
 

@@ -2,7 +2,7 @@ import torch
 from torch import dropout, nn
 from torchvision.transforms import Resize
 from general_layers.conv import Conv, ResidualConv, TransposedConv, InterleaveUpscaling, ConnectedUpscale
-from helpers import log
+from utils.helpers import log
 
 
 class MappingVAE(nn.Module):

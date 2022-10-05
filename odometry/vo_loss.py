@@ -1,6 +1,6 @@
 import torch
-from helpers import  log
-from helpers import euler2matrix, matrix2euler
+from utils.helpers import  log
+from utils.helpers import euler2matrix, matrix2euler
 
 class CLVO_Loss():
 

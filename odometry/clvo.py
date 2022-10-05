@@ -3,7 +3,7 @@ from torch import nn
 from general_layers.conv import Conv, ResidualConv
 from general_layers.vit import ViT
 
-from helpers import log
+from utils.helpers import log
 
 
 class CLVO(nn.Module):

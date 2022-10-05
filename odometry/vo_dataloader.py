@@ -1,6 +1,6 @@
 import torch
 import time
-from helpers import log
+from utils.helpers import log
 
 class CustomKITTIDataLoader():
     def __init__(self, dataset, batch_size) -> None:

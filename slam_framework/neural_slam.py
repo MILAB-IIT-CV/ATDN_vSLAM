@@ -8,9 +8,9 @@ from torch.utils.data import DataLoader
 
 from GMA.core.network import RAFTGMA
 
-from helpers import log, transform, matrix2euler
-from arguments import Arguments
-from gma_parameters import GMA_Parameters
+from utils.helpers import log, transform, matrix2euler
+from utils.arguments import Arguments
+from utils.gma_parameters import GMA_Parameters
 
 from odometry.clvo import CLVO
 

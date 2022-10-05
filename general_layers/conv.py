@@ -2,7 +2,7 @@ from torchvision.transforms import Resize
 from torch import nn
 import torch
 
-from helpers import log
+from utils.helpers import log
 
 
 

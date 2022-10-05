@@ -7,7 +7,7 @@ from GMA.core.utils.utils import InputPadder
 from torchvision.transforms import Resize
 import torchvision.io as io
 
-from helpers import matrix2euler, line2matrix, log
+from utils.helpers import matrix2euler, line2matrix, log
 
 
 class OdometryDataset(data.Dataset):
