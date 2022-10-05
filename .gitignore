@@ -3,15 +3,12 @@ config.yaml
 tests.ipynb
 /__pycache__
 /GMA
-/einops
 /odometry/__pycache__
 /general_layers/__pycache__
 /localization/__pycache__
 /slam_framework/__pycache__
-Unet_sigmaloss.png
-generate_flow.py
+utils
 loss_log/*
-training_log.md
 checkpoints/clvo_generalization*
 results.txt
 normalization_cache/__pycache__
