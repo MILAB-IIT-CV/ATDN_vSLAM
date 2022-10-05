@@ -22,7 +22,7 @@ In case you are using this work please cite our paper:
 
 ### Config
 
- Before using the SLAM, a .yaml config file is required in the utils folder. Here is an example how config.yaml should look like:
+ Before using the SLAM, a config.yaml file is required in the utils folder. Here is an example what it should contain:
  ```yaml
 !!python/object:arguments.Arguments
 alpha: 0.3
