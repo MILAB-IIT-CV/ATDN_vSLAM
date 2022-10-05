@@ -7,7 +7,7 @@ tests.ipynb
 /general_layers/__pycache__
 /localization/__pycache__
 /slam_framework/__pycache__
-utils
+tools
 loss_log/*
 checkpoints/clvo_generalization*
 results.txt
