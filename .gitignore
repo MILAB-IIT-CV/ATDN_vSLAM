@@ -12,10 +12,8 @@ Unet_sigmaloss.png
 generate_flow.py
 loss_log/*
 training_log.md
-LSTM_test.png
-odometry/clvo_generalization*
-normalization_cache/*2.pth
-normalization_test.png
+checkpoints/clvo_generalization*
 results.txt
-normalization_cache/__pycache__/normalization.cpython*
-utils/*.png
+normalization_cache/__pycache__
+plots
+depth_gen
