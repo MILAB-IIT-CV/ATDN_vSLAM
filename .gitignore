@@ -12,5 +12,6 @@ loss_log/*
 checkpoints/clvo_generalization*
 results.txt
 normalization_cache/__pycache__
+utils/__pycache__
 plots
 depth_gen

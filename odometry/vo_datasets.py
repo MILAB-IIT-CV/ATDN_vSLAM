@@ -181,11 +181,11 @@ class CustomKittiOdometryDataset(OdometryDataset):
 
 
 class FlowKittiDataset(OdometryDataset):
-    def __init__(self, data_path, sequences=['00'], precomputed_flow=False, sequence_length=4, device='cuda'):
+    def __init__(self, data_path : str, sequences : list = ['00'], reverse : bool = False, sequence_length : int =4, device : str ='cuda'):
         super(FlowKittiDataset, self).__init__()
 
         self.sequences = sequences
-        self.precomputed_flow = precomputed_flow
+        self.reverse = 0 if reverse else 1
         self.N = sequence_length
         self.device = device
 
@@ -221,7 +221,8 @@ class FlowKittiDataset(OdometryDataset):
 
 
     def __getitem__(self, index):
-            #actual_time = time.time()
+            augment = (self.reverse + torch.rand(1)) < 0.5
+            #log("Reverse flow augmentation: ", augment)
 
             sequence_index = 0
             index_offset = 0
@@ -233,28 +234,25 @@ class FlowKittiDataset(OdometryDataset):
 
             index = index-index_offset
 
-            #log("Sequence_search: ", time.time()-actual_time)
-            #actual_time = time.time()
-
             # Getting pose difference as rotation and translation vectors
             poses_n = [self.sequence_poses[sequence_index][index+i, :] for i in range(0, self.N+1)]
+            if augment:
+                poses_n.reverse()
+
             delta_transforms = [super(FlowKittiDataset, self).preprocess_poses_euler(poses_n[i], poses_n[i+1]) for i in range(0, (self.N))]
             delta_rotations = [delta_transforms[i][0] for i in range(len(delta_transforms))]
             delta_translations = [delta_transforms[i][1] for i in range(len(delta_transforms))]
             delta_rotations = torch.stack(delta_rotations)
             delta_translations = torch.stack(delta_translations)
 
-            #log("Image load: ", time.time()-actual_time)
-            #actual_time = time.time()
-
             flow_path = path.join(self.data_path, "flows", self.sequences[sequence_index])
+
             # Generating flow file names from index
             flow_files = ['0'*(6-len(str(index+i))) + str(index+i) + ".pt" for i in range(0, self.N)]
             flows = [torch.load(path.join(flow_path, flow_file)) for flow_file in flow_files]
             flows = torch.stack(flows, dim=0).squeeze()
             flows = self.resize(flows)
-
-            #log("Flow fload: ", time.time()-actual_time)
-            #actual_time = time.time()
+            if augment:
+                flows = -1*flows
                 
             return flows, delta_rotations, delta_translations

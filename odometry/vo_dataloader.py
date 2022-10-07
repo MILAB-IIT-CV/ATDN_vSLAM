@@ -1,6 +1,5 @@
 import torch
-import time
-from utils.helpers import log
+
 
 class CustomKITTIDataLoader():
     def __init__(self, dataset, batch_size) -> None:
@@ -20,31 +19,19 @@ class CustomKITTIDataLoader():
 
         images, fl, true_rot, true_tr = [], [], [], []
 
-        #actual_time = time.time()
-
         for j in range(self.batch_size):
             imgs, flow, true_rotation, true_translation = self.dataset[int(self.indexes[self.indexes_index+j])]
-            #print("Dataset lookup: ", (time.time()-actual_time)*1000)
-            #actual_time = time.time()
 
             images.append(imgs)
             fl.append(flow)
             true_rot.append(true_rotation)
             true_tr.append(true_translation)
 
-            #print("Append: ", (time.time()-actual_time)*1000)
-            #actual_time = time.time()
-
-        #actual_time = time.time()
-        #print()
-
         images = torch.stack(images, dim=0)
         fl = torch.stack(fl, dim=0)
         true_rot = torch.stack(true_rot, dim=0)
         true_tr = torch.stack(true_tr, dim=0)
 
-        #print("Stack: ", (time.time()-actual_time)*1000)
-        #actual_time = time.time()
 
         self.indexes_index = self.indexes_index+self.batch_size
         return int(self.indexes_index/self.batch_size), (images, fl, true_rot, true_tr)
@@ -72,8 +59,6 @@ class FlowKITTIDataLoader():
 
         fl, true_rot, true_tr = [], [], []
 
-        #actual_time = time.time()
-
         for j in range(self.batch_size):
             flow, true_rotation, true_translation = self.dataset[int(self.indexes[self.indexes_index+j])]
 
@@ -81,15 +66,9 @@ class FlowKITTIDataLoader():
             true_rot.append(true_rotation)
             true_tr.append(true_translation)
 
-        #actual_time = time.time()
-        #print()
-
         fl = torch.stack(fl, dim=0)
         true_rot = torch.stack(true_rot, dim=0)
         true_tr = torch.stack(true_tr, dim=0)
-
-        #print("Stack: ", (time.time()-actual_time)*1000)
-        #actual_time = time.time()
 
         self.indexes_index = self.indexes_index+self.batch_size
         return int(self.indexes_index/self.batch_size), (fl, true_rot, true_tr)
