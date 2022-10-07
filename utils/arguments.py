@@ -24,6 +24,6 @@ class Arguments():
         self.w : int
 
     @classmethod
-    def get_arguments(cls, config_path="config.yaml"):
+    def get_arguments(cls, config_path="utils/config.yaml"):
         args = yaml.load(open(config_path, "r"), yaml.Loader)
         return args
