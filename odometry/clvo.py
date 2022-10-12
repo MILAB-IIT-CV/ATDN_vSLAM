@@ -27,7 +27,7 @@ class CLVO(nn.Module):
         activation = nn.Mish
 
         self.encoder_CNN = nn.Sequential(
-            nn.BatchNorm2d(num_features=self.in_channels),
+            nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=1, groups=in_channels),
             Conv(in_channels=self.in_channels, 
                  out_channels=16, 
                  kernel_size=7, 
