@@ -21,7 +21,7 @@ In case you are using this work please cite our paper:
 - PyTorch: The main Machine Learning library.
 - [GMA](https://github.com/zacjiang/GMA) optical flow library: Used for Deep Learnig based flow estimation (has to be cloned in the SLAM's library to a GMA subfolder. After cloning, imports have to be updated.)
 - For GMA, [einops](https://github.com/arogozhnikov/einops) is also required.
-- MatPlotLib: Required to plot the outputs.
+- Matplotlib: Required to plot the outputs.
 - In the training scripts tensorboard is also used
 
 ### Config
