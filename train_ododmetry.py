@@ -51,8 +51,8 @@ def train(args, normalization, model, dataloader, odometry_loss, optimizer, sche
         optimizer.step()
         scheduler.step()
 
-        writer.add_scalar('Loss', loss.item(), batch+epoch*len(dataloader))
-        writer.add_scalar('Learning Rate', scheduler.get_last_lr()[0], batch+epoch*len(dataloader))
+        writer.add_scalar('0: Loss', loss.item(), batch+epoch*len(dataloader))
+        writer.add_scalar('1: Learning Rate', scheduler.get_last_lr()[0], batch+epoch*len(dataloader))
         
         print("", end='\r')
         print("Iteration: %d / %d \t|\t Loss: %5f" % (batch, len(dataloader), loss.item()), '\t|\t Learning rate: ', scheduler.get_last_lr(),  end='\n')
@@ -70,7 +70,7 @@ def main():
     writer = SummaryWriter("loss_log/tensorboard")
 
     # Instantiating dataset and dataloader
-    dataset = FlowKittiDataset(args.data_path, sequences=args.train_sequences, reverse=True, sequence_length=args.sequence_length)
+    dataset = FlowKittiDataset(args.data_path, sequences=args.train_sequences, reverse=False, sequence_length=args.sequence_length)
     dataloader = FlowKITTIDataLoader(dataset=dataset, batch_size=args.batch_size)
 
     normalization = TrainableStandardization().eval()
