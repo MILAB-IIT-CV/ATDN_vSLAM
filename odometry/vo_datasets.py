@@ -157,9 +157,9 @@ class CustomKittiOdometryDataset(OdometryDataset):
             # Generating image file names from index
             im_path = path.join(self.data_path, "sequences", self.sequences[sequence_index], "image_2")
             img_files = ['0'*(6-len(str(index+i))) + str(index+i) + ".png" for i in range(0, self.N+1)]
-            imgs = torch.stack([self.padder.pad(io.read_image(path.join(im_path, im_file)).float())[0] for im_file in img_files], dim=0)
+            imgs = [self.resize(io.read_image(path.join(im_path, im_file)).float()) for im_file in img_files]
+            imgs = [self.padder.pad(imgs[i])[0] for i in range(0, self.N+1)]
             imgs = torch.stack([imgs[i] for i in range(0, self.N+1)], dim=0)
-            imgs = self.resize(imgs)
 
             #log("Image load: ", time.time()-actual_time)
             #actual_time = time.time()
