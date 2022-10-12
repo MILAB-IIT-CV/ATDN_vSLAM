@@ -7,7 +7,7 @@ from utils.helpers import log
 
 
 class CLVO(nn.Module):
-    def __init__(self, batch_size=1, in_channels=2):
+    def __init__(self, batch_size=1, in_channels=2, init=False):
         super(CLVO, self).__init__()
 
         # ------------------------------
@@ -27,15 +27,23 @@ class CLVO(nn.Module):
         activation = nn.Mish
 
         self.encoder_CNN = nn.Sequential(
-            Conv(in_channels=self.in_channels, out_channels=16, kernel_size=[7, 7], stride=2, padding=3, activation=activation),
-            ResidualConv(in_channels=16, out_channels=16, stride=2),
-            ResidualConv(in_channels=16, out_channels=16, stride=2),
-            ResidualConv(in_channels=16, out_channels=16, stride=2),
-            ResidualConv(in_channels=16, out_channels=16, stride=2),
-            ResidualConv(in_channels=16, out_channels=16, stride=2),
+            nn.BatchNorm2d(num_features=self.in_channels),
+            Conv(in_channels=self.in_channels, 
+                 out_channels=16, 
+                 kernel_size=7, 
+                 stride=2, 
+                 padding=3, 
+                 activation=activation,
+                 bias=False,
+                 init=init),
+            ResidualConv(in_channels=16, out_channels=16, stride=2, init=init),
+            ResidualConv(in_channels=16, out_channels=16, stride=2, init=init),
+            ResidualConv(in_channels=16, out_channels=16, stride=2, init=init),
+            ResidualConv(in_channels=16, out_channels=16, stride=2, init=init),
+            ResidualConv(in_channels=16, out_channels=16, stride=2, init=init),
             nn.Flatten(),
-            nn.Linear(in_features=1920, out_features=1024),
-            nn.Dropout(0.2),
+            nn.Linear(in_features=1920, out_features=1024, bias=True),
+            nn.Dropout(p=0.2),
             activation(inplace=True)
         )
 
@@ -51,11 +59,27 @@ class CLVO(nn.Module):
         self.lstm_states = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
                               torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'))
 
+        if init:
+            for layer in self.encoder_CNN:
+                if type(layer) is nn.Linear:
+                    nn.init.kaiming_normal(layer.weight)
+            nn.init.kaiming_normal(self.lstm.weight_hh)
+            nn.init.kaiming_normal(self.lstm.weight_ih)
+
         # -------------------------
         # Odometry estimator module
         # -------------------------
-        self.translation_regressor = Regressor_MLP(in_features=self.lstm_out_size, out_features=3, activation=activation)
-        self.rotation_regressor = Regressor_MLP(in_features=self.lstm_out_size, out_features=3, activation=activation)
+        self.translation_regressor = Regressor_MLP(in_features=self.lstm_out_size, 
+                                                   out_features=3, 
+                                                   activation=activation, 
+                                                   bias=False,
+                                                   init=init)
+
+        self.rotation_regressor = Regressor_MLP(in_features=self.lstm_out_size, 
+                                                out_features=3, 
+                                                activation=activation, 
+                                                bias=False,
+                                                init=init)
 
 
     def forward(self, *args):
@@ -94,21 +118,30 @@ class CLVO(nn.Module):
 
 
 class Regressor_MLP(nn.Module):
-    def __init__(self, in_features, out_features, activation=nn.PReLU) -> None:
+    def __init__(
+        self, 
+        in_features, 
+        out_features, 
+        activation = nn.PReLU, 
+        bias = True,
+        init = False
+    ) -> None:
         super(Regressor_MLP, self).__init__()
 
         self.regressor = nn.Sequential(
             nn.Linear(in_features=in_features, out_features=128),
+            nn.Dropout(p=0.2),
             activation(inplace=True),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=128, out_features=64),
+            nn.Linear(in_features=128, out_features=64, bias=True),
+            nn.Dropout(p=0.2),
             activation(inplace=True),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=64, out_features=out_features)
-            
+            nn.Linear(in_features=64, out_features=out_features, bias=bias)
         )
 
-        #self.regressor.apply(init_weights)
+        if init:
+            for layer in self.regressor:
+                if type(layer) is nn.Linear:
+                    nn.init.kaiming_normal(layer.weight)
 
     def forward(self, x):
         return self.regressor(x)
