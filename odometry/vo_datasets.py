@@ -236,14 +236,13 @@ class FlowKittiDataset(OdometryDataset):
 
             # Getting pose difference as rotation and translation vectors
             poses_n = [self.sequence_poses[sequence_index][index+i, :] for i in range(0, self.N+1)]
+            
             if augment:
                 poses_n.reverse()
 
             delta_transforms = [super(FlowKittiDataset, self).preprocess_poses_euler(poses_n[i], poses_n[i+1]) for i in range(0, (self.N))]
-            delta_rotations = [delta_transforms[i][0] for i in range(len(delta_transforms))]
-            delta_translations = [delta_transforms[i][1] for i in range(len(delta_transforms))]
-            delta_rotations = torch.stack(delta_rotations)
-            delta_translations = torch.stack(delta_translations)
+            delta_rotations = torch.stack([delta_transforms[i][0] for i in range(len(delta_transforms))])
+            delta_translations = torch.stack([delta_transforms[i][1] for i in range(len(delta_transforms))])
 
             flow_path = path.join(self.data_path, "flows", self.sequences[sequence_index])
 
@@ -253,6 +252,6 @@ class FlowKittiDataset(OdometryDataset):
             flows = torch.stack(flows, dim=0).squeeze()
             flows = self.resize(flows)
             if augment:
-                flows = -1*flows
+                flows = -1.0*flows
                 
             return flows, delta_rotations, delta_translations
