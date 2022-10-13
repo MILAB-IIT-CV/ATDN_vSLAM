@@ -76,7 +76,7 @@ def main():
     normalization = TrainableStandardization().eval()
     # normalization.load_state_dict(torch.load("checkpoints/norm.pth"))
 
-    model = CLVO(args.batch_size, in_channels=2, init=True).to(args.device)
+    model = CLVO(args.batch_size, in_channels=2).to(args.device)
 
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     log("Trainable parameters:", trainable_params)

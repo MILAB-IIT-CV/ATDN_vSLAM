@@ -28,9 +28,6 @@ class Conv(nn.Module):
                               padding=padding,
                               bias=bias)
 
-        if init:
-          nn.init.kaiming_normal(self.conv.weight)
-
         self.activation = activation(inplace=True)
 
         self.bn = nn.BatchNorm2d(num_features=out_channels)
@@ -57,8 +54,7 @@ class ResidualConv(nn.Module):
            stride=1, 
            padding=1, 
            activation=activation, 
-           bias=False,
-           init=init),
+           bias=False),
 
       Conv(in_channels=in_channels, 
            out_channels=in_channels, 
@@ -66,8 +62,7 @@ class ResidualConv(nn.Module):
            stride=stride, 
            padding=1, 
            activation=activation, 
-           bias=False,
-           init=init)
+           bias=False)
     )
 
     self.skip_layer = nn.Conv2d(in_channels=in_channels, 
@@ -76,8 +71,6 @@ class ResidualConv(nn.Module):
                                 stride=stride, 
                                 bias=False)
 
-    if init:
-      nn.init.kaiming_normal(self.skip_layer.weight)
 
     self.out_block = nn.Sequential(
       nn.Mish(),

@@ -7,7 +7,7 @@ from utils.helpers import log
 
 
 class CLVO(nn.Module):
-    def __init__(self, batch_size=1, in_channels=2, init=False):
+    def __init__(self, batch_size=1, in_channels=2):
         super(CLVO, self).__init__()
 
         # ------------------------------
@@ -34,13 +34,12 @@ class CLVO(nn.Module):
                  stride=2, 
                  padding=3, 
                  activation=activation,
-                 bias=False,
-                 init=init),
-            ResidualConv(in_channels=16, out_channels=16, stride=2, init=init),
-            ResidualConv(in_channels=16, out_channels=16, stride=2, init=init),
-            ResidualConv(in_channels=16, out_channels=16, stride=2, init=init),
-            ResidualConv(in_channels=16, out_channels=16, stride=2, init=init),
-            ResidualConv(in_channels=16, out_channels=16, stride=2, init=init),
+                 bias=False),
+            ResidualConv(in_channels=16, out_channels=16, stride=2),
+            ResidualConv(in_channels=16, out_channels=16, stride=2),
+            ResidualConv(in_channels=16, out_channels=16, stride=2),
+            ResidualConv(in_channels=16, out_channels=16, stride=2),
+            ResidualConv(in_channels=16, out_channels=16, stride=2),
             nn.Flatten(),
             nn.Linear(in_features=1920, out_features=1024, bias=True),
             nn.Dropout(p=0.2),
@@ -58,13 +57,6 @@ class CLVO(nn.Module):
 
         self.lstm_states = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
                               torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'))
-
-        if init:
-            for layer in self.encoder_CNN:
-                if type(layer) is nn.Linear:
-                    nn.init.kaiming_normal(layer.weight)
-            nn.init.kaiming_normal(self.lstm.weight_hh)
-            nn.init.kaiming_normal(self.lstm.weight_ih)
 
         # -------------------------
         # Odometry estimator module
@@ -138,10 +130,6 @@ class Regressor_MLP(nn.Module):
             nn.Linear(in_features=64, out_features=out_features, bias=bias)
         )
 
-        if init:
-            for layer in self.regressor:
-                if type(layer) is nn.Linear:
-                    nn.init.kaiming_normal(layer.weight)
 
     def forward(self, x):
         return self.regressor(x)
