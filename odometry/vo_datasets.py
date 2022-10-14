@@ -252,6 +252,7 @@ class FlowKittiDataset(OdometryDataset):
             flows = torch.stack(flows, dim=0).squeeze()
             flows = self.resize(flows)
             if augment:
-                flows = -1.0*flows
+                log("Flows shape: ", flows.shape)
+                flows = -1.0*torch.flip(flows, dims=0)
                 
             return flows, delta_rotations, delta_translations
