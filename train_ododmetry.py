@@ -8,7 +8,7 @@ from odometry.vo_loss import CLVO_Loss
 from odometry.vo_datasets import FlowKittiDataset
 from odometry.vo_dataloader import FlowKITTIDataLoader
 from odometry.clvo import CLVO
-from normalization_cache.normalization import TrainableStandardization
+from utils.normalization import TrainableStandardization
 from utils.helpers import log
 from utils.arguments import Arguments
 import numpy as np
