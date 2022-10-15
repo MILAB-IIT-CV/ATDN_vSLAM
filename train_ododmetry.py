@@ -20,7 +20,7 @@ import math
 def train(args, normalization, model, dataloader, odometry_loss, optimizer, scheduler, writer, epoch, log_vals=[]):
     #im_mean, im_std, flows_mean, flows_std = normalization_cache
 
-    for batch, (fl, true_rot, true_tr) in iter(dataloader):
+    for batch, (fl, true_rot, true_tr) in enumerate(dataloader):
 
         optimizer.zero_grad()
         loss = 0
