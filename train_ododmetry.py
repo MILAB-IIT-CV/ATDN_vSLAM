@@ -1,7 +1,8 @@
 # PyTorch imports
 import torch
 from torch import optim
-from torch.utils.tensorboard import SummaryWriter
+from torch.utils.data import DataLoader
+from torch.utils.tensorboard.writer import SummaryWriter
 
 # Project module imports
 from odometry.vo_loss import CLVO_Loss
@@ -71,7 +72,8 @@ def main():
 
     # Instantiating dataset and dataloader
     dataset = FlowKittiDataset(args.data_path, sequences=args.train_sequences, reverse=False, sequence_length=args.sequence_length)
-    dataloader = FlowKITTIDataLoader(dataset=dataset, batch_size=args.batch_size)
+    #dataloader = FlowKITTIDataLoader(dataset=dataset, batch_size=args.batch_size)
+    dataloader = DataLoader(dataset=dataset, batch_size=args.batch_size, drop_last=True)
 
     normalization = TrainableStandardization().eval()
     # normalization.load_state_dict(torch.load("checkpoints/norm.pth"))
