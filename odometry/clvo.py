@@ -64,14 +64,12 @@ class CLVO(nn.Module):
         self.translation_regressor = Regressor_MLP(in_features=self.lstm_out_size, 
                                                    out_features=3, 
                                                    activation=activation, 
-                                                   bias=False,
-                                                   init=init)
+                                                   bias=False)
 
         self.rotation_regressor = Regressor_MLP(in_features=self.lstm_out_size, 
                                                 out_features=3, 
                                                 activation=activation, 
-                                                bias=False,
-                                                init=init)
+                                                bias=False)
 
 
     def forward(self, *args):
