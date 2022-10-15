@@ -34,7 +34,7 @@ with torch.no_grad():
             _, flow_up = gma(im1, im2, iters=12, test_mode=True)
             
             flow_file = (6-len(str(i)))*'0'+str(i) + ".pt"        
-            torch.save(flow_up, args.data_path+"/dataset/flows/"+sequence+"/"+flow_file)
+            torch.save(flow_up.to('cpu'), args.data_path+"/dataset/flows/"+sequence+"/"+flow_file)
 
             print('    ', end='\r')
             print(i, end='')
