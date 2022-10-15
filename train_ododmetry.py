@@ -47,10 +47,10 @@ def train(args, normalization, model, dataloader, odometry_loss, optimizer, sche
 
         log_vals.append(loss.item())
         loss.backward()
-        model.reset_lstm()
         
         optimizer.step()
         scheduler.step()
+        model.reset_lstm()
 
         writer.add_scalar('0: Loss', loss.item(), batch+epoch*len(dataloader))
         writer.add_scalar('1: Learning Rate', scheduler.get_last_lr()[0], batch+epoch*len(dataloader))
