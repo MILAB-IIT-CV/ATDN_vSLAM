@@ -10,7 +10,7 @@ gma_parameters = GMA_Parameters()
 args = Arguments.get_arguments()
 
 gma = torch.nn.DataParallel(RAFTGMA(gma_parameters), device_ids=[0])
-
+gma.load_state_dict(torch.load(gma_parameters.model))
 
 with torch.no_grad():
     sequences = sorted(os.listdir(args.data_path+"/dataset/sequences"))
