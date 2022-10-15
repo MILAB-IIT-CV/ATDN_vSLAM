@@ -1,3 +1,4 @@
+from argparse import ArgumentError
 import sys, os
 sys.path.insert(0, os.path.abspath(".."))
 import torch
@@ -66,7 +67,7 @@ def convert_to_KITTI_format(rotations_array, translations_array):
     raise NotImplementedError()
 
 
-def euler2matrix(r, convention="yxz", device="cuda"):
+def euler2matrix(r : torch.Tensor, convention="yxz", device="cuda") -> torch.Tensor:
     c1 = torch.cos(r[0])
     c2 = torch.cos(r[1])
     c3 = torch.cos(r[2])
@@ -74,7 +75,9 @@ def euler2matrix(r, convention="yxz", device="cuda"):
     s1 = torch.sin(r[0])
     s2 = torch.sin(r[1])
     s3 = torch.sin(r[2])
-  
+    
+    R = None
+
     if convention == "yxz":
         R = torch.tensor([  [c1*c3 + s1*s2*s3, c3*s1*s2 - c1*s3, c2*s1],
                             [c2*s3, c2*c3, -s2],
@@ -88,10 +91,14 @@ def euler2matrix(r, convention="yxz", device="cuda"):
                             [s2*s3, c2, -s2*c3],
                             [-c3*s1-c2*c1*s3, s2*c1, c2*c1*c3-s1*s3]], device=device)
 
+    if R is None:
+        raise ArgumentError(None, "convention" + str(convention) + " is not supported")
+
     return R
 
 
 def matrix2euler(R, convention="yxz"):
+    alpha, beta, gamma = None, None, None
     if convention == "yxz":
         alpha = torch.atan2(R[0, 2], R[2, 2])
         beta = torch.atan2(-R[1, 2], torch.sqrt(1-R[1, 2]**2))
@@ -104,7 +111,7 @@ def matrix2euler(R, convention="yxz"):
     return torch.tensor([alpha, beta, gamma])
 
 
-def transform(rot, tr):
+def transform(rot : torch.Tensor, tr):
     rot = euler2matrix(rot, device="cpu")
     mat = torch.cat([rot, tr.unsqueeze(1).to('cpu')], dim=1)
     mat = torch.cat([mat, torch.tensor([[0, 0, 0, 1]])], dim=0)
