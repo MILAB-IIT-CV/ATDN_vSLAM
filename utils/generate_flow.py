@@ -13,6 +13,7 @@ gma = torch.nn.DataParallel(RAFTGMA(gma_parameters), device_ids=[0])
 gma.load_state_dict(torch.load(gma_parameters.model))
 
 with torch.no_grad():
+    # TODO modify to generate flows for test sets
     sequences = sorted(os.listdir(args.data_path+"/dataset/sequences"))
     for sequence in sequences:
         dataset = KittiOdometryDataset(args.data_path, 

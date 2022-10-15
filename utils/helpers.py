@@ -4,9 +4,9 @@ sys.path.insert(0, os.path.abspath(".."))
 import torch
 
 
-class LogShape(torch.nn.Module):
+class ShapeLogLayer(torch.nn.Module):
     def __init__(self, message) -> None:
-        super(LogShape, self).__init__()
+        super(ShapeLogLayer, self).__init__()
         self.message = message
 
     def forward(self, input):
@@ -79,17 +79,17 @@ def euler2matrix(r : torch.Tensor, convention="yxz", device="cuda") -> torch.Ten
     R = None
 
     if convention == "yxz":
-        R = torch.tensor([  [c1*c3 + s1*s2*s3, c3*s1*s2 - c1*s3, c2*s1],
-                            [c2*s3, c2*c3, -s2],
-                            [c1*s2*s3 - c3*s1, c1*c3*s2+s1*s3, c1*c2]], device=device)
+        R = torch.tensor([  [c1*c3 + s1*s2*s3,  c3*s1*s2 - c1*s3,   c2*s1],
+                            [c2*s3,             c2*c3,              -s2],
+                            [c1*s2*s3 - c3*s1,  c1*c3*s2+s1*s3,     c1*c2]], device=device)
     elif convention == "xyx":
-        R = torch.tensor([  [c2, s2*s3, c3*s2],
-                            [s1*s2, c1*c3-c2*s1*s3, -c3*s3-c2*c3*s1],
-                            [-c1*s2, c3*s1+c1*c2*s3, c1*c2*c3-s1*s3]], device=device)
+        R = torch.tensor([  [c2,                s2*s3,          c3*s2],
+                            [s1*s2,             c1*c3-c2*s1*s3, -c3*s3-c2*c3*s1],
+                            [-c1*s2,            c3*s1+c1*c2*s3, c1*c2*c3-s1*s3]], device=device)
     elif convention == "yxy":
-        R = torch.tensor([  [c1*c3-c2*s1*s3, s2*s1, c2*s1*s1+c1*s3],
-                            [s2*s3, c2, -s2*c3],
-                            [-c3*s1-c2*c1*s3, s2*c1, c2*c1*c3-s1*s3]], device=device)
+        R = torch.tensor([  [c1*c3-c2*s1*s3,    s2*s1,          c2*s1*s1+c1*s3],
+                            [s2*s3,             c2,             -s2*c3],
+                            [-c3*s1-c2*c1*s3,   s2*c1,          c2*c1*c3-s1*s3]], device=device)
 
     if R is None:
         raise ArgumentError(None, "convention" + str(convention) + " is not supported")
@@ -111,12 +111,18 @@ def matrix2euler(R, convention="yxz"):
     return torch.tensor([alpha, beta, gamma])
 
 
-def transform(rot : torch.Tensor, tr):
-    rot = euler2matrix(rot, device="cpu")
-    mat = torch.cat([rot, tr.unsqueeze(1).to('cpu')], dim=1)
-    mat = torch.cat([mat, torch.tensor([[0, 0, 0, 1]])], dim=0)
+def transform(rot : torch.Tensor, tr, device="cpu"):
+    # Euler to matrix rotation representation
+    rot = euler2matrix(rot, device=device)
+
+    # Concatenating rotation matrix and translation vector
+    mat = torch.cat([rot, tr.unsqueeze(1).to(device)], dim=1)
+
+    # Adding the extra row for homogenous matrix
+    mat = torch.cat([mat, torch.tensor([[0, 0, 0, 1]], device=device)], dim=0)
 
     return mat
+
 
 # TODO Implement Homogenous Matrix to Euler+Trnaslation conversion
 

@@ -1,15 +1,18 @@
 import torch
 from utils.helpers import  log
-from utils.helpers import euler2matrix, matrix2euler
+from utils.helpers import euler2matrix, matrix2euler, transform
 
 class CLVO_Loss():
 
     def __init__(self, alpha=1, w=3):
+        self.rot_weight = (1.0/torch.tensor([0.0175, 0.0031, 0.0027])).unsqueeze(0)
+        self.tr_weight = (1.0/torch.tensor([0.0219, 0.0260, 1.0917])).unsqueeze(0)
+        
         self.last_com = 0
         self.stage = 0
         self.alpha = alpha
         self.delta = 1
-        self.khi = 100
+        self.khi = 1
         self.w = w
 
 
@@ -56,25 +59,10 @@ class CLVO_Loss():
         true_homogenous_array = []
         for i in range(len(pred_rot)):
             # Converting predicted
-            # Euler to matrix rotation representation
-            rot_mat = euler2matrix(pred_rot[i], device=device)
-            # Concatenating rotation matrix and translation vector
-
-            mat = torch.cat([rot_mat, pred_tr[i].unsqueeze(1)], dim=1)
-            # Adding the extra row for homogenous matrix
-            mat = torch.cat([mat, torch.tensor([[0, 0, 0, 1]], device=device)], dim=0)
-            # Appending matrix to array
-            pred_homogenous_array.append(mat)
+            pred_homogenous_array.append(transform(pred_rot[i], pred_tr[i], device=device))
 
             # Converting true
-            # Euler to matrix rotation representation
-            rot_mat = euler2matrix(true_rot[i], device=device)
-            # Concatenating rotation matrix and translation vector
-            mat = torch.cat([rot_mat, true_tr[i].unsqueeze(1)], dim=1)
-            # Adding the extra row for homogenous matrix
-            mat = torch.cat([mat, torch.tensor([[0, 0, 0, 1]], device=device)], dim=0)
-            # Appending matrix to array
-            true_homogenous_array.append(mat)
+            true_homogenous_array.append(transform(true_rot[i], true_tr[i], device=device))
 
         losses = []
         for j in range(len(pred_homogenous_array)-w):
@@ -101,19 +89,12 @@ class CLVO_Loss():
 
     def transform_loss(self, pred_rotation, pred_translation, true_rotation, true_translation, device='cuda'):
 
-        pred_rotation = pred_rotation.to(device)
-        pred_translation = pred_translation.to(device)
-
-        true_rotation = true_rotation.to(device)
-        true_translation = true_translation.to(device)
-
-
-        diff_translation = pred_translation-true_translation
-        diff_rotation = pred_rotation-true_rotation
+        diff_rotation = pred_rotation-true_rotation*self.rot_weight
+        diff_translation = pred_translation-true_translation*self.tr_weight
         
         # Mean is changed to be calculated in call method
-        norm_rotation = (diff_rotation**2).sum(-1)
-        norm_translation = (diff_translation**2).sum( -1)
+        norm_rotation = torch.linalg.norm(diff_rotation, dim=-1, ord='fro')
+        norm_translation = torch.linalg.norm(diff_translation, dim=-1, ord='fro')
 
         loss = self.delta*norm_translation + self.khi*norm_rotation
         return loss
