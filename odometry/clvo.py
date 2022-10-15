@@ -52,10 +52,16 @@ class CLVO(nn.Module):
         # Blocks of the LSTM (Long Short Term Memory) module
         # --------------------------------------------------
         self.lstm_out_size = 512
-        self.lstm = nn.LSTMCell(input_size=1024,
+        self.lstm1 = nn.LSTMCell(input_size=1024,
                                 hidden_size=self.lstm_out_size)
 
-        self.lstm_states = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
+        self.lstm_states1 = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
+                              torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'))
+
+        self.lstm2 = nn.LSTMCell(input_size=self.lstm_out_size,
+                                hidden_size=self.lstm_out_size)
+
+        self.lstm_states2 = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
                               torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'))
 
         # -------------------------
@@ -87,8 +93,9 @@ class CLVO(nn.Module):
         # ----------------------
         # Long Short Term Memory
         # ----------------------
-        self.lstm_states = self.lstm(features, self.lstm_states)
-        lstm_out = self.lstm_states[0]
+        self.lstm_states1 = self.lstm1(features, self.lstm_states1)
+        self.lstm_states2 = self.lstm1(self.lstm_states1[0], self.lstm_states2)
+        lstm_out = self.lstm_states2[0]
         #lstm_out = lstm_out.squeeze()
         #log("LSTM out:", lstm_out.shape)
 
@@ -103,7 +110,9 @@ class CLVO(nn.Module):
 
 
     def reset_lstm(self):
-        self.lstm_states = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
+        self.lstm_states1 = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
+                            torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'))
+        self.lstm_states2 = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
                             torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'))
 
 
