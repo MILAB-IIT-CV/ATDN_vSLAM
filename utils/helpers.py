@@ -97,8 +97,9 @@ def euler2matrix(r : torch.Tensor, convention="yxz", device="cuda") -> torch.Ten
     return R
 
 
-def matrix2euler(R, convention="yxz"):
+def matrix2euler(R, convention="yxz", device="cpu"):
     alpha, beta, gamma = None, None, None
+
     if convention == "yxz":
         alpha = torch.atan2(R[0, 2], R[2, 2])
         beta = torch.atan2(-R[1, 2], torch.sqrt(1-R[1, 2]**2))
@@ -108,7 +109,8 @@ def matrix2euler(R, convention="yxz"):
         beta = torch.atan2(torch.sqrt(1-R[1, 1]**2), R[1, 1])
         gamma = torch.atan2(R[1, 0], -R[1, 2])
 
-    return torch.tensor([alpha, beta, gamma])
+    euler = torch.tensor([alpha, beta, gamma], device=device)
+    return euler
 
 
 def transform(rot : torch.Tensor, tr, device="cpu"):
