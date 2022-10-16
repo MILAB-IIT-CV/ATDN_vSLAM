@@ -28,15 +28,12 @@ def train(args, normalization, model, dataloader, odometry_loss, optimizer, sche
         rots, trs = [], []
 
         for j in range(args.sequence_length):
-            flows, true_rotations, true_translations = fl[:, j], true_rot[:, j], true_tr[:, j]
+            flows = fl[:, j]
 
             flows = flows.squeeze().to(args.device)
             flows = normalization(flows)
             input_data = flows
 
-            true_rotations = true_rotations.squeeze().to(args.device)
-            true_translations = true_translations.squeeze().to(args.device)
-            
             pred_rotations, pred_translations = model(input_data)
 
             rots.append(pred_rotations)
@@ -44,7 +41,10 @@ def train(args, normalization, model, dataloader, odometry_loss, optimizer, sche
 
         pred_rots = torch.stack(rots, dim=1)
         pred_trs = torch.stack(trs, dim=1)
-        loss = odometry_loss([pred_rots, pred_trs], [true_rot.to(args.device), true_tr.to(args.device)], device=args.device)
+        true_rot = true_rot.to(args.device)
+        true_tr = true_tr.to(args.device)
+        
+        loss = odometry_loss([pred_rots, pred_trs], [true_rot, true_tr], device=args.device)
 
         log_vals.append(loss.item())
         loss.backward()
