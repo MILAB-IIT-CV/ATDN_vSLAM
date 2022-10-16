@@ -89,8 +89,8 @@ class CLVO_Loss():
 
     def transform_loss(self, pred_rotation, pred_translation, true_rotation, true_translation, device='cuda'):
 
-        diff_rotation = pred_rotation-true_rotation*self.rot_weight
-        diff_translation = pred_translation-true_translation*self.tr_weight
+        diff_rotation = (pred_rotation-true_rotation)*self.rot_weight
+        diff_translation = (pred_translation-true_translation)*self.tr_weight
         
         # Mean is changed to be calculated in call method
         norm_rotation = torch.linalg.norm(diff_rotation, dim=-1, ord='fro')
