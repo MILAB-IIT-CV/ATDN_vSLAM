@@ -7,7 +7,7 @@ from utils.helpers import log
 
 
 class CLVO(nn.Module):
-    def __init__(self, batch_size=1, in_channels=2):
+    def __init__(self, batch_size=1, in_channels=2, device="cuda:0"):
         super(CLVO, self).__init__()
 
         # ------------------------------
@@ -16,6 +16,7 @@ class CLVO(nn.Module):
         
         self.batch_size = batch_size
         self.in_channels = in_channels
+        self.device = device
 
         self.activation = nn.PReLU
         self.MLP_activation = nn.PReLU
@@ -55,14 +56,14 @@ class CLVO(nn.Module):
         self.lstm1 = nn.LSTMCell(input_size=1024,
                                  hidden_size=self.lstm_out_size)
 
-        self.lstm_states1 = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
-                             torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'))
+        self.lstm_states1 = (torch.zeros(self.batch_size, self.lstm_out_size).to(device), 
+                             torch.zeros(self.batch_size, self.lstm_out_size).to(device))
 
         self.lstm2 = nn.LSTMCell(input_size=self.lstm_out_size,
                                  hidden_size=self.lstm_out_size)
 
-        self.lstm_states2 = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
-                             torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'))
+        self.lstm_states2 = (torch.zeros(self.batch_size, self.lstm_out_size).to(device), 
+                             torch.zeros(self.batch_size, self.lstm_out_size).to(device))
 
         # -------------------------
         # Odometry estimator module
@@ -110,10 +111,10 @@ class CLVO(nn.Module):
 
 
     def reset_lstm(self):
-        self.lstm_states1 = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
-                            torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'))
-        self.lstm_states2 = (torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'), 
-                            torch.zeros(self.batch_size, self.lstm_out_size).to('cuda'))
+        self.lstm_states1 = (torch.zeros(self.batch_size, self.lstm_out_size).to(self.device), 
+                            torch.zeros(self.batch_size, self.lstm_out_size).to(self.device))
+        self.lstm_states2 = (torch.zeros(self.batch_size, self.lstm_out_size).to(self.device), 
+                            torch.zeros(self.batch_size, self.lstm_out_size).to(self.device))
 
 
 class Regressor_MLP(nn.Module):
