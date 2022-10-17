@@ -52,7 +52,7 @@ train_sequences:
 - '09'
 - '10'
 wd: 0.001
-weight_decay: false
+augment_flow: false
 precomputed_flow: true
 w : 2
 

@@ -17,7 +17,7 @@ class Arguments():
         self.sequence_length : int
         self.weight_file : str
         self.log_file : str
-        self.weight_decay : bool
+        self.augment_flow : bool
         self.train_sequences : list
         self.precomputed_flow: bool
         self.stage : int
