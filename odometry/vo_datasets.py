@@ -12,7 +12,7 @@ from utils.helpers import matrix2euler, line2matrix, log
 
 class OdometryDataset(data.Dataset):
     def __init__(self):
-            super(OdometryDataset, self).__init__()
+        super(OdometryDataset, self).__init__()
     
 
     def preprocess_poses_euler(self,  pose1, pose2):
@@ -32,7 +32,14 @@ class OdometryDataset(data.Dataset):
         
 
 class KittiOdometryDataset(OdometryDataset):
-    def __init__(self, data_path, sequence, precomputed_flow=False, sequence_length=4, device='cuda'):
+    def __init__(
+        self, 
+        data_path, 
+        sequence, 
+        precomputed_flow=False, 
+        sequence_length=4, 
+        device='cuda'
+    ) -> None:
         super(KittiOdometryDataset, self).__init__()
         
         self.sequence = sequence
@@ -88,7 +95,14 @@ class KittiOdometryDataset(OdometryDataset):
 
 
 class CustomKittiOdometryDataset(OdometryDataset):
-    def __init__(self, data_path, sequences=['00'], precomputed_flow=False, sequence_length=4, device='cuda'):
+    def __init__(
+        self, 
+        data_path, 
+        sequences=['00'], 
+        precomputed_flow=False, 
+        sequence_length=4, 
+        device='cuda'
+    ) -> None:
         super(CustomKittiOdometryDataset, self).__init__()
 
         self.sequences = sequences
@@ -181,11 +195,18 @@ class CustomKittiOdometryDataset(OdometryDataset):
 
 
 class FlowKittiDataset(OdometryDataset):
-    def __init__(self, data_path : str, sequences : list = ['00'], reverse : bool = False, sequence_length : int =4, device : str ='cuda'):
+    def __init__(
+        self, 
+        data_path : str, 
+        sequences : list = ['00'], 
+        augment : bool = False, 
+        sequence_length : int =4, 
+        device : str ='cuda'
+    ) -> None:
         super(FlowKittiDataset, self).__init__()
 
         self.sequences = sequences
-        self.reverse = 0 if reverse else 1
+        self.augment = 0 if augment else 1
         self.N = sequence_length
         self.device = device
 
@@ -221,7 +242,7 @@ class FlowKittiDataset(OdometryDataset):
 
 
     def __getitem__(self, index):
-            augment = (self.reverse + torch.rand(1)) < 0.5
+            reverse = (self.augment + torch.rand(1)) < 0.5
             #log("Reverse flow augmentation: ", augment)
 
             sequence_index = 0
@@ -237,7 +258,7 @@ class FlowKittiDataset(OdometryDataset):
             # Getting pose difference as rotation and translation vectors
             poses_n = [self.sequence_poses[sequence_index][index+i, :] for i in range(0, self.N+1)]
             
-            if augment:
+            if reverse:
                 poses_n.reverse()
 
             delta_transforms = [super(FlowKittiDataset, self).preprocess_poses_euler(poses_n[i], poses_n[i+1]) for i in range(0, (self.N))]
@@ -251,7 +272,7 @@ class FlowKittiDataset(OdometryDataset):
             flows = [torch.load(path.join(flow_path, flow_file)) for flow_file in flow_files]
             flows = torch.stack(flows, dim=0).squeeze()
             flows = self.resize(flows)
-            if augment:
+            if reverse:
                 flows = -1.0*torch.flip(flows, dims=[0])
                 
             return flows, delta_rotations, delta_translations

@@ -18,3 +18,4 @@ plots
 depth_gen
 __init__.py
 setup.py
+depth/*
