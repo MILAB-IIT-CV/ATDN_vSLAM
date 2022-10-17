@@ -8,9 +8,8 @@ import torch.utils.tensorboard
 # Project module imports
 from odometry.vo_loss import CLVO_Loss
 from odometry.vo_datasets import FlowKittiDataset
-from odometry.vo_dataloader import FlowKITTIDataLoader
+from odometry.vo_dataloader import FlowStandardization
 from odometry.clvo import CLVO
-from utils.normalization import TrainableStandardization
 from utils.helpers import log
 from utils.arguments import Arguments
 import numpy as np
@@ -19,7 +18,6 @@ import math
 
 
 def train(args, normalization, model, dataloader, odometry_loss, optimizer, scheduler, writer, epoch, log_vals=[]):
-    #im_mean, im_std, flows_mean, flows_std = normalization_cache
 
     for batch, (fl, true_rot, true_tr) in enumerate(dataloader):
 
@@ -73,27 +71,30 @@ def main():
 
     # Instantiating dataset and dataloader
     dataset = FlowKittiDataset(args.data_path, sequences=args.train_sequences, reverse=False, sequence_length=args.sequence_length)
-    #dataloader = FlowKITTIDataLoader(dataset=dataset, batch_size=args.batch_size)
     dataloader = DataLoader(dataset=dataset, batch_size=args.batch_size, shuffle=True, num_workers=4, pin_memory=True, drop_last=True)
 
-    normalization = TrainableStandardization().eval()
-    # normalization.load_state_dict(torch.load("checkpoints/norm.pth"))
+    normalization =  FlowStandardization().eval()
 
     model = CLVO(args.batch_size, in_channels=2).to(args.device)
 
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     log("Trainable parameters:", trainable_params)
     
-    #load_path = args.weight_file+str(args.stage-1)+".pth"
-    #log("Loading weigths from ", load_path)
-    #model.load_state_dict(torch.load(load_path, map_location=args.device))
+    if args.stage > 1:
+        load_path = args.weight_file+str(args.stage-1)+".pth"
+        log("Loading weigths from ", load_path)
+        model.load_state_dict(torch.load(load_path, map_location=args.device))
 
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd, eps=args.epsilon)
-    #optimizer = optim.RAdam(model.parameters(), lr=args.lr,  weight_decay=args.wd)
     #optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
+    if args.stage > 1:
+        scheduler_limit = math.floor(args.epochs*(len(dataset)//2-args.batch_size)/args.batch_size)
+    else:
+        scheduler_limit = math.floor(args.epochs*(len(dataset)-args.batch_size)/args.batch_size)
+
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, 
-                                                     math.floor(args.epochs*(len(dataset)-args.batch_size)/args.batch_size), 
+                                                     scheduler_limit, 
                                                      eta_min=1e-6)
 
     loss = CLVO_Loss(args.alpha, w=args.w)
@@ -105,6 +106,15 @@ def main():
         print("------------------------------------------ ", "Epoch ", epoch+1, "/", args.epochs, " ------------------------------------------\n")
         log_vals_actual = []
         
+        if epoch == (args.epochs//2) and (args.stage > 1):
+            optimizer = optim.AdamW(model.parameters(), 
+                                    lr=args.lr/10, 
+                                    weight_decay=args.wd/10, 
+                                    eps=args.epsilon)
+            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, 
+                                                    scheduler_limit, 
+                                                    eta_min=1e-6)
+
         train(args,
               normalization,
               model, 
@@ -122,6 +132,9 @@ def main():
         save_path = (args.weight_file+str(args.stage)+".pth")
         log("Saving model as ", save_path)
         torch.save(model.state_dict(), save_path)
+
+    writer.flush()
+    writer.close()
 
 
 # Calling main training method
