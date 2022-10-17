@@ -108,8 +108,8 @@ def main():
         
         if epoch == (args.epochs//2) and (args.stage > 1):
             optimizer = optim.AdamW(model.parameters(), 
-                                    lr=args.lr/10, 
-                                    weight_decay=args.wd/10, 
+                                    lr=args.lr/2, 
+                                    weight_decay=args.wd/2, 
                                     eps=args.epsilon)
             scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, 
                                                     scheduler_limit, 
