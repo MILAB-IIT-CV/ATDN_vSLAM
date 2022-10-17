@@ -8,7 +8,7 @@ import torch.utils.tensorboard
 # Project module imports
 from odometry.vo_loss import CLVO_Loss
 from odometry.vo_datasets import FlowKittiDataset
-from odometry.vo_dataloader import FlowStandardization
+from utils.normalization import FlowStandardization
 from odometry.clvo import CLVO
 from utils.helpers import log
 from utils.arguments import Arguments

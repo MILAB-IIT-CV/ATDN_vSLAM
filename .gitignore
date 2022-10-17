@@ -16,3 +16,5 @@ normalization_cache/__pycache__
 utils/__pycache__
 plots
 depth_gen
+__init__.py
+setup.py
