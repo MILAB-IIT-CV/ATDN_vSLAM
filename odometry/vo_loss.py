@@ -9,7 +9,6 @@ class CLVO_Loss():
         self.tr_weight  = (1.0/torch.tensor([0.0219, 0.0260, 1.0917], device=device)).unsqueeze(0)
         
         self.last_com = 0
-        self.stage = 0
         self.alpha = alpha
         self.delta = 1
         self.khi = 1
@@ -58,10 +57,7 @@ class CLVO_Loss():
         pred_homogenous_array = []
         true_homogenous_array = []
         for i in range(len(pred_rot)):
-            # Converting predicted
             pred_homogenous_array.append(transform(pred_rot[i], pred_tr[i], device=device))
-
-            # Converting true
             true_homogenous_array.append(transform(true_rot[i], true_tr[i], device=device))
 
         losses = []
@@ -72,6 +68,7 @@ class CLVO_Loss():
             for i in range(j+1, j+w+1):
                 pred_comm = torch.matmul(pred_comm, pred_homogenous_array[i])
                 true_comm = torch.matmul(true_comm, true_homogenous_array[i])
+            
             # Converting back to euler and separaing the matrix
             pred_comm_rot = matrix2euler(pred_comm[:3, :3], device=device)
             pred_comm_tr = pred_comm[:3, -1]
@@ -83,14 +80,17 @@ class CLVO_Loss():
             loss = self.transform_loss(pred_comm_rot, pred_comm_tr, true_comm_rot, true_comm_tr)
             losses.append(loss)
 
-        loss = torch.cat(losses, dim=0)
+        loss = torch.stack(losses, dim=0)
         return loss
 
 
     def transform_loss(self, pred_rotation, pred_translation, true_rotation, true_translation):
 
-        diff_rotation = (pred_rotation-true_rotation)*self.rot_weight
-        diff_translation = (pred_translation-true_translation)*self.tr_weight
+        diff_rotation = (pred_rotation-true_rotation)
+        diff_translation = (pred_translation-true_translation)
+
+        diff_rotation = (diff_rotation*self.rot_weight).squeeze()
+        diff_translation = (diff_translation*self.tr_weight).squeeze()
         
         norm_rotation = torch.linalg.vector_norm(diff_rotation, dim=-1, ord=2)
         norm_translation = torch.linalg.vector_norm(diff_translation, dim=-1, ord=2)
