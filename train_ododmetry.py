@@ -70,7 +70,7 @@ def main():
     writer = SummaryWriter("loss_log/tensorboard")
 
     # Instantiating dataset and dataloader
-    dataset = FlowKittiDataset(args.data_path, sequences=args.train_sequences, augment=True, sequence_length=args.sequence_length)
+    dataset = FlowKittiDataset(args.data_path, sequences=args.train_sequences, augment=args.augment_flow, sequence_length=args.sequence_length)
     dataloader = DataLoader(dataset=dataset, batch_size=args.batch_size, shuffle=True, num_workers=4, pin_memory=True, drop_last=True)
 
     normalization =  FlowStandardization().eval()
