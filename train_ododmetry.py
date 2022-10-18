@@ -69,7 +69,6 @@ def main():
     
     # Instantiating arguments object for optical flow module
     args = Arguments.get_arguments()
-    writer = SummaryWriter("loss_log/tensorboard/"+str(datetime.now())[:10])
     log("Flow augmentation: ", args.augment_flow)
     # Instantiating dataset and dataloader
     dataset = FlowKittiDataset(args.data_path, sequences=args.train_sequences, augment=args.augment_flow, sequence_length=args.sequence_length)
@@ -102,8 +101,10 @@ def main():
     loss = CLVO_Loss(args.alpha, w=args.w)
 
 
+    now = datetime.now()
+    writer = SummaryWriter("loss_log/tensorboard/"+str(now)[:10]+str(now.hour)+str(now.minute))
     model.train()
-    print(" ============================================ ", "Training", " ============================================\n")
+    print("============================================ ", "Training", " =============================================\n")
     for epoch in range(args.epochs):
         print("------------------------------------------ ", "Epoch ", epoch+1, "/", args.epochs, " ------------------------------------------\n")
         log_vals_actual = []
@@ -121,7 +122,7 @@ def main():
               normalization,
               model, 
               dataloader, 
-              loss,
+              loss, 
               optimizer, 
               scheduler, 
               writer,
