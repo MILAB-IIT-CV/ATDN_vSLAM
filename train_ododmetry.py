@@ -1,3 +1,5 @@
+from datetime import datetime
+
 # PyTorch imports
 import torch
 from torch import optim
@@ -51,8 +53,8 @@ def train(args, normalization, model, dataloader, odometry_loss, optimizer, sche
         scheduler.step()
         model.reset_lstm()
 
-        writer.add_scalar('0: Loss', loss.item(), batch+epoch*len(dataloader))
-        writer.add_scalar('1: Learning Rate', scheduler.get_last_lr()[0], batch+epoch*len(dataloader))
+        writer.add_scalar('Loss', loss.item(), batch+epoch*len(dataloader))
+        writer.add_scalar('Learning Rate', scheduler.get_last_lr()[0], batch+epoch*len(dataloader))
         
         print("", end='\r')
         print("Iteration: %d / %d \t|\t Loss: %5f" % (batch, len(dataloader), loss.item()), '\t|\t Learning rate: ', scheduler.get_last_lr(),  end='\n')
@@ -67,8 +69,7 @@ def main():
     
     # Instantiating arguments object for optical flow module
     args = Arguments.get_arguments()
-    writer = SummaryWriter("loss_log/tensorboard")
-
+    log("Flow augmentation: ", args.augment_flow)
     # Instantiating dataset and dataloader
     dataset = FlowKittiDataset(args.data_path, sequences=args.train_sequences, augment=args.augment_flow, sequence_length=args.sequence_length)
     dataloader = DataLoader(dataset=dataset, batch_size=args.batch_size, shuffle=True, num_workers=4, pin_memory=True, drop_last=True)
@@ -100,8 +101,10 @@ def main():
     loss = CLVO_Loss(args.alpha, w=args.w)
 
 
+    now = datetime.now()
+    writer = SummaryWriter("loss_log/tensorboard/"+str(now)[:10]+str(now.hour)+str(now.minute))
     model.train()
-    print(" ============================================ ", "Training", " ============================================\n")
+    print("============================================ ", "Training", " =============================================\n")
     for epoch in range(args.epochs):
         print("------------------------------------------ ", "Epoch ", epoch+1, "/", args.epochs, " ------------------------------------------\n")
         log_vals_actual = []
