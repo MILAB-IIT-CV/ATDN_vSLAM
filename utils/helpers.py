@@ -76,11 +76,11 @@ def read_calib(path, include_rect=False):
     return calib
 
 
-def project_depth(depth, calib):
+def project_depth(depth, calib, device="cuda:0"):
     height, width = depth.shape[-2], depth.shape[-1]
     
-    tensor_u = torch.arange(0, width, 1).repeat((height, 1))
-    tensor_v = torch.arange(0, height, 1).repeat((width, 1)).permute(1, 0)
+    tensor_u = torch.arange(0, width, 1).repeat((height, 1)).to(device)
+    tensor_v = torch.arange(0, height, 1).repeat((width, 1)).permute(1, 0).to(device)
 
     h_u = tensor_u*depth
     h_v = tensor_v*depth
