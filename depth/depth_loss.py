@@ -1,9 +1,9 @@
 import torch
-from utils.helpers import project_depth
+from utils.helpers import project_depth, log
 
 class Movement_Depth_Loss():
-    def __init__(self):
-        pass
+    def __init__(self, device="cuda:0"):
+        self.device = device
 
     def __call__(self, depth1, depth2, flows, calibs, transforms):
         #assert depth1.shape == depth2.shape
@@ -13,14 +13,14 @@ class Movement_Depth_Loss():
         for i in range(batch):
             # Index element of batch
             calib = calibs[i]
-            points1 = project_depth(depth1[i], calib).permute(1, 2, 0)
-            points2 = project_depth(depth2[i], calib)
+            points1 = project_depth(depth1[i], calib, device=self.device).permute(1, 2, 0)
+            points2 = project_depth(depth2[i], calib, device=self.device)
             flow = flows[i]
             transform = transforms[i]
 
             # x & Y index tensors
-            index_u = torch.arange(0, width, 1).repeat((height, 1))
-            index_v = torch.arange(0, height, 1).repeat((width, 1)).permute(1, 0)
+            index_u = torch.arange(0, width, 1).repeat((height, 1)).to(self.device)
+            index_v = torch.arange(0, height, 1).repeat((width, 1)).permute(1, 0).to(self.device)
 
             # Using optical flow to pair 3D points
             index_u = (index_u + flow[0]).long()
@@ -34,17 +34,17 @@ class Movement_Depth_Loss():
             index_v = torch.where(mask, index_v, 0)
 
             # Transforming 3D points of second depth with GT transform
-            points2 = torch.cat([points2.view(3, height*width), torch.ones(1, height*width)], dim=0)
+            points2 = torch.cat([points2.view(3, height*width), torch.ones((1, height*width), device=self.device)], dim=0)
             points2 = torch.matmul(transform[:3, :].float(), points2)
+
             points2 = points2.view(3, height, width).permute(1, 2, 0)
             points2 = points2[index_v, index_u, :]
 
-
-            print(points1[mask].shape)
-            print(points2[mask].shape)
-
             diff = torch.norm((points2[mask]-points1[mask]), p="fro", dim=-1)
-            print(diff.shape)
             
+            loss = diff.mean()
+            losses.append(loss)
+            
+        losses = torch.stack(losses, dim=0)
 
-        pass
+        return losses.mean()
