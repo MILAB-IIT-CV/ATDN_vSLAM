@@ -49,7 +49,7 @@ class ResidualConv(nn.Module):
 
     self.conv = nn.Sequential(
       Conv(in_channels=in_channels, 
-           out_channels=out_channels, 
+           out_channels=in_channels, 
            kernel_size=3, 
            stride=1, 
            padding=1, 
@@ -57,7 +57,7 @@ class ResidualConv(nn.Module):
            bias=False),
 
       Conv(in_channels=in_channels, 
-           out_channels=in_channels, 
+           out_channels=out_channels, 
            kernel_size=3, 
            stride=stride, 
            padding=1, 

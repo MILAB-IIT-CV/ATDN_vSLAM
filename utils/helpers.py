@@ -6,13 +6,13 @@ import torch
 
 
 class ShapeLogLayer(torch.nn.Module):
-    def __init__(self, message) -> None:
+    def __init__(self, message='') -> None:
         super(ShapeLogLayer, self).__init__()
         self.message = message
 
     def forward(self, input):
         log(self.message+" shape: ", input.shape)
-        return input.shape
+        return input
 
 
 class BetaScheduler():
