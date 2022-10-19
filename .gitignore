@@ -2,7 +2,7 @@ config.yaml
 /.venv
 /.vscode
 tests.ipynb
-/__pycache__
+__pycache__
 /GMA
 /odometry/__pycache__
 /general_layers/__pycache__
@@ -18,4 +18,3 @@ plots
 depth_gen
 __init__.py
 setup.py
-depth/*
