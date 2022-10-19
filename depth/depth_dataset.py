@@ -78,7 +78,7 @@ class OdometryDepthDataset(OdometryDataset):
             # Getting pose difference as rotation and translation vectors
             poses_n = [self.sequence_poses[sequence_index][index+i, :] for i in range(0, self.N+1)]
             delta_transforms = [self.to_relative_matrix(poses_n[i], poses_n[i+1]) for i in range(0, (self.N))]
-            delta_transforms = torch.stack(delta_transforms, dim=0)
+            delta_transforms = torch.stack(delta_transforms, dim=0).squeeze()
 
             # Generating image file names from index
             im_path = path.join(self.data_path, "sequences", self.sequences[sequence_index], "image_2")
