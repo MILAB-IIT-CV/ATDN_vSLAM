@@ -7,7 +7,12 @@ from utils.helpers import log
 
 
 class CLVO(nn.Module):
-    def __init__(self, batch_size=1, in_channels=2, device="cuda:0"):
+    def __init__(
+        self, 
+        batch_size=1, 
+        in_channels=2, 
+        device="cuda:0"
+    ):
         super(CLVO, self).__init__()
 
         # ------------------------------
@@ -115,6 +120,9 @@ class CLVO(nn.Module):
                             torch.zeros(self.batch_size, self.lstm_out_size).to(self.device))
         self.lstm_states2 = (torch.zeros(self.batch_size, self.lstm_out_size).to(self.device), 
                             torch.zeros(self.batch_size, self.lstm_out_size).to(self.device))
+
+
+    # TODO implement .to() for lstm_states
 
 
 class Regressor_MLP(nn.Module):

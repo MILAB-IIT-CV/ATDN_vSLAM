@@ -77,10 +77,12 @@ def main():
     normalization =  FlowStandardization().eval()
 
     model = CLVO(args.batch_size, in_channels=2).to(args.device)
-
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     log("Trainable parameters:", trainable_params)
-    
+
+    now = datetime.now()
+    writer = SummaryWriter("loss_log/tensorboard/"+str(now)[:10]+str(now.hour)+str(now.minute))
+
     if args.stage > 1:
         load_path = args.weight_file+str(args.stage-1)+".pth"
         log("Loading weigths from ", load_path)
@@ -89,11 +91,8 @@ def main():
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd, eps=args.epsilon)
     #optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
-    if args.stage > 1:
-        scheduler_limit = math.floor(args.epochs*(len(dataset)//2-args.batch_size)/args.batch_size)
-    else:
-        scheduler_limit = math.floor(args.epochs*(len(dataset)-args.batch_size)/args.batch_size)
 
+    scheduler_limit = math.floor(args.epochs*(len(dataset)-args.batch_size)/args.batch_size)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, 
                                                      scheduler_limit, 
                                                      eta_min=1e-6)
@@ -101,23 +100,12 @@ def main():
     loss = CLVO_Loss(args.alpha, w=args.w)
 
 
-    now = datetime.now()
-    writer = SummaryWriter("loss_log/tensorboard/"+str(now)[:10]+str(now.hour)+str(now.minute))
     model.train()
     print("============================================ ", "Training", " =============================================\n")
     for epoch in range(args.epochs):
         print("------------------------------------------ ", "Epoch ", epoch+1, "/", args.epochs, " ------------------------------------------\n")
         log_vals_actual = []
         
-        if epoch == (args.epochs//2) and (args.stage > 1):
-            optimizer = optim.AdamW(model.parameters(), 
-                                    lr=args.lr/2, 
-                                    weight_decay=args.wd/2, 
-                                    eps=args.epsilon)
-            scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, 
-                                                    scheduler_limit, 
-                                                    eta_min=1e-6)
-
         train(args,
               normalization,
               model, 
@@ -138,6 +126,8 @@ def main():
 
     writer.flush()
     writer.close()
+
+    log("Training started at: ", now, " and ended at: ", datetime.now(), ". Ellapsed time: ", datetime.now()-now)
 
 
 # Calling main training method

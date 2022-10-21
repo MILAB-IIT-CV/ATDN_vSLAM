@@ -66,8 +66,9 @@ def main():
     
 
     model = model.to("cuda:0").train()
+    epochs = 20
     print("============================================ ", "Training", " =============================================\n")
-    for epoch in range(args.epochs):
+    for epoch in range(epochs):
         print("------------------------------------------ ", "Epoch ", epoch+1, "/", args.epochs, " ------------------------------------------\n")
         
         train(model, loss_fn, dataloader, optimizer, scheduler, writer, epoch)
