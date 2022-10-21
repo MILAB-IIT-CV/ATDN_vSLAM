@@ -72,7 +72,7 @@ def main():
     log("Flow augmentation: ", args.augment_flow)
     # Instantiating dataset and dataloader
     dataset = FlowKittiDataset(args.data_path, sequences=args.train_sequences, augment=args.augment_flow, sequence_length=args.sequence_length)
-    dataloader = DataLoader(dataset=dataset, batch_size=args.batch_size, shuffle=True, num_workers=4, pin_memory=True, drop_last=True)
+    dataloader = DataLoader(dataset=dataset, batch_size=args.batch_size, shuffle=True, num_workers=2, pin_memory=True, drop_last=True)
 
     normalization =  FlowStandardization().eval()
 
@@ -95,7 +95,7 @@ def main():
     scheduler_limit = math.floor(args.epochs*(len(dataset)-args.batch_size)/args.batch_size)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, 
                                                      scheduler_limit, 
-                                                     eta_min=1e-6)
+                                                     eta_min=1e-9)
 
     loss = CLVO_Loss(args.alpha, w=args.w)
 

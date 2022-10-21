@@ -11,7 +11,7 @@ class CLVO_Loss():
         self.last_com = 0
         self.alpha = alpha
         self.delta = 1
-        self.khi = 1
+        self.khi = 100
         self.w = w
 
 
@@ -30,7 +30,7 @@ class CLVO_Loss():
         # Relative pose loss
         # -------------------
         L_rel = 0
-        L_rel = self.transform_loss(pred_rot, pred_tr, true_rot, true_tr).sum(-1)
+        L_rel = self.transform_loss2(pred_rot, pred_tr, true_rot, true_tr).sum(-1)
 
         # -------------------
         # Composite pose loss
@@ -77,14 +77,26 @@ class CLVO_Loss():
             true_comm_rot = matrix2euler(true_comm[:3, :3], device=device)
             true_comm_tr = true_comm[:3, -1]
             
-            loss = self.transform_loss(pred_comm_rot, pred_comm_tr, true_comm_rot, true_comm_tr)
+            loss = self.transform_loss2(pred_comm_rot, pred_comm_tr, true_comm_rot, true_comm_tr)
             losses.append(loss)
 
         loss = torch.stack(losses, dim=0)
         return loss
 
+    def transform_loss1(self, pred_rotation, pred_translation, true_rotation, true_translation):
 
-    def transform_loss(self, pred_rotation, pred_translation, true_rotation, true_translation):
+        diff_rotation = (pred_rotation-true_rotation)
+        diff_translation = (pred_translation-true_translation)
+        
+        norm_rotation = (diff_rotation**2).sum(dim=-1)
+        norm_translation = (diff_translation**2).sum(dim=-1)
+
+        loss = self.delta*norm_translation + self.khi*norm_rotation
+        return loss
+
+
+
+    def transform_loss2(self, pred_rotation, pred_translation, true_rotation, true_translation):
 
         diff_rotation = (pred_rotation-true_rotation)
         diff_translation = (pred_translation-true_translation)
@@ -95,6 +107,6 @@ class CLVO_Loss():
         norm_rotation = torch.linalg.vector_norm(diff_rotation, dim=-1, ord=2)
         norm_translation = torch.linalg.vector_norm(diff_translation, dim=-1, ord=2)
 
-        loss = self.delta*norm_translation + self.khi*norm_rotation
+        loss = norm_translation + norm_rotation
         return loss
 
