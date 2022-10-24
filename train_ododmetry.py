@@ -92,7 +92,7 @@ def main():
     #optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
 
-    scheduler_limit = math.floor(args.epochs*(len(dataset)-args.batch_size)/args.batch_size)
+    scheduler_limit = args.epochs*math.ceil((len(dataset)-args.batch_size)/args.batch_size)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, 
                                                      scheduler_limit, 
                                                      eta_min=1e-9)
