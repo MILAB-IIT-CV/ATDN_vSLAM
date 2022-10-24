@@ -17,4 +17,4 @@ Alternatively, you can use our own visualizer python script with:
 
 `python visualizer.py ATDN_prediction.txt GT.txt --model_name ATDN_v1 --plots xz`
 
-The optional argument `--plots` take several plot types (such as xz xyz). 
+The optional argument `--plots` takes several plot types (such as xz xyz). 
