@@ -4,6 +4,7 @@ import glob
 import numpy as np
 import torch
 from torchvision.transforms import Resize
+from torchvision.transforms.transforms import InterpolationMode
 from torchvision.io import read_image
 
 from GMA.core.utils.utils import InputPadder
@@ -55,6 +56,7 @@ class OdometryDepthDataset(OdometryDataset):
 
         img = read_image(path.join(self.data_path, "sequences", '00', "image_2", "000000.png")).float()
         self.resize = Resize((img.shape[-2], img.shape[-1]))
+        self.resize2 = Resize((img.shape[-2], img.shape[-1]), interpolation=InterpolationMode.NEAREST)
         self.padder = InputPadder(img.shape)
 
 
@@ -88,6 +90,13 @@ class OdometryDepthDataset(OdometryDataset):
                 imgs = [self.padder.pad(imgs[i])[0] for i in range(0, self.N+1)]
             imgs = torch.stack([imgs[i] for i in range(0, self.N+1)], dim=0)
 
+            # Generating image file names from index
+            mask_path = path.join(self.data_path, "skymasks", self.sequences[sequence_index])
+            mask_files = ['0'*(6-len(str(index+i))) + str(index+i) + ".pth" for i in range(0, self.N+1)]
+            masks = [self.resize(torch.load(path.join(mask_path, mask_file)).unsqueeze(0).float()) for mask_file in mask_files]
+            #masks = [torch.load(path.join(mask_path, mask_file)).unsqueeze(0) for mask_file in mask_files]
+            masks = torch.stack([masks[i] for i in range(0, self.N+1)], dim=0).bool().squeeze()
+
             flow_path = path.join(self.data_path, "flows", self.sequences[sequence_index])
             # Generating flow file names from index
             flow_files = ['0'*(6-len(str(index+i))) + str(index+i) + ".pt" for i in range(0, self.N)]
@@ -95,7 +104,7 @@ class OdometryDepthDataset(OdometryDataset):
             flows = torch.stack(flows, dim=0).squeeze()
             flows = self.resize(flows)
             
-            return imgs, flows, delta_transforms, self.calibs[sequence_index]
+            return imgs, flows, delta_transforms, self.calibs[sequence_index], masks
 
 
     def to_relative_matrix(self, pose1, pose2):

@@ -113,7 +113,7 @@ class TransposedConv(nn.Module):
         return self.conv(input)
 
 
-class InterleaveUpscaling(nn.Module):
+class DUC(nn.Module):
   def __init__(
       self, 
       in_channels, 
@@ -121,9 +121,9 @@ class InterleaveUpscaling(nn.Module):
       kernel_size, 
       stride, 
       padding, 
-      activation=nn.PReLU
+      activation=nn.Mish
   ):
-    super(InterleaveUpscaling, self).__init__()
+    super(DUC, self).__init__()
     
     self.out_channels = out_channels
     
@@ -143,6 +143,26 @@ class InterleaveUpscaling(nn.Module):
     x = self.reshuffle(x)
     
     return x
+
+
+class ConnectedDUC(nn.Module):
+    def __init__(
+        self,
+        in_channels, 
+        out_channels,
+    ) -> None:
+       super(ConnectedDUC, self).__init__()
+       
+       self.duc = DUC(in_channels=in_channels, out_channels=out_channels, kernel_size=3, stride=1, padding=1)
+       self.connector = Conv(in_channels=in_channels*2, out_channels=in_channels, kernel_size=3, padding=1)
+
+
+    def forward(self, direct, skip):
+        x = torch.cat([direct, skip], dim=1)
+        x = self.connector(x)
+        x = self.duc(x)
+
+        return x
 
 
 class ConnectedUpscale(nn.Module):

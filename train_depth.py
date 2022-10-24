@@ -13,7 +13,7 @@ from depth.depth_loss import Movement_Depth_Loss
 
 
 def train(model, loss_fn, dataloader, optimizer, scheduler, writer, epoch):
-    for batch, (imgs, flows, transforms, calib) in enumerate(dataloader):
+    for batch, (imgs, flows, transforms, calib, masks) in enumerate(dataloader):
         optimizer.zero_grad()
         
         imgs = imgs.to("cuda:0")
@@ -22,9 +22,10 @@ def train(model, loss_fn, dataloader, optimizer, scheduler, writer, epoch):
         calib = calib.to("cuda:0")
 
         input = torch.cat([flows, imgs[:, 0, :, :, :], imgs[:, 1, :, :, :]], dim=1)
+        
         depth1, depth2 = model(input)
 
-        loss = loss_fn(depth1, depth2, flows, calib, transforms)
+        loss = loss_fn(depth1, depth2, flows, calib, transforms, masks)
         
         loss.backward()
         optimizer.step()
@@ -57,7 +58,7 @@ def main():
     now = datetime.now()
     writer = SummaryWriter("loss_log/depth/tensorboard/"+str(now)[:10]+str(now.hour)+str(now.minute))
     
-    imgs, flow, transforms, calib = dataset[5]
+    imgs, flow, transforms, calib, masks = dataset[5]
     im1, im2 = imgs[0].unsqueeze(0), imgs[1].unsqueeze(0)
     flow = flow.unsqueeze(0)
     input = torch.cat([flow, im1, im2], dim=1).to("cpu")
@@ -69,11 +70,11 @@ def main():
     epochs = 20
     print("============================================ ", "Training", " =============================================\n")
     for epoch in range(epochs):
-        print("------------------------------------------ ", "Epoch ", epoch+1, "/", args.epochs, " ------------------------------------------\n")
+        print("------------------------------------------ ", "Epoch ", epoch+1, "/", epochs, " ------------------------------------------\n")
         
         train(model, loss_fn, dataloader, optimizer, scheduler, writer, epoch)
-        log("Saving model to /checkpoints/depth_predictor.pth")
-        torch.save(model.state_dict(), "/checkpoints/depth_predictor.pth")
+        log("Saving model to checkpoints/depth_predictor.pth")
+        torch.save(model.state_dict(), "checkpoints/depth_predictor.pth")
 
     writer.flush()
     writer.close()
