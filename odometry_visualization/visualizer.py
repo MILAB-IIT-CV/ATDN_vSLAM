@@ -1,8 +1,11 @@
 import argparse
 import datetime
+import os.path
+
 import matplotlib.pyplot as plt
 
 import evo.main_ape as main_ape
+import evo.main_traj as main_traj
 from evo.tools import file_interface
 from evo.tools import plot
 from evo.tools.plot import PlotMode
@@ -104,4 +107,29 @@ if __name__ == "__main__":
                            max_map=result.stats["max"],
                            )
 
-        plt.savefig(f"out_{est_name}_{plot_mode_string}_{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')}.png")
+        plt.savefig(f"{est_name}_{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')}_{plot_mode_string}.png")
+
+        plot_collection = plot.PlotCollection("evo_traj - trajectory plot")
+        fig_xyz, axarr_xyz = plt.subplots(3, sharex="col", figsize=tuple(SETTINGS.plot_figsize))
+        plot.traj_xyz(axarr_xyz,
+                      traj_ref,
+                      style=SETTINGS.plot_reference_linestyle,
+                      color=SETTINGS.plot_reference_color,
+                      label="ground truth",
+                      alpha=SETTINGS.plot_reference_alpha,
+                      start_timestamp=None,
+                      )
+        traj_est.align_origin(traj_ref=traj_ref)
+        plot.traj_xyz(axarr_xyz,
+                      traj_est,
+                      style=SETTINGS.plot_trajectory_linestyle,
+                      color="blue",
+                      label=est_name,
+                      alpha=SETTINGS.plot_trajectory_alpha,
+                      start_timestamp=None,
+                      )
+        plot_collection.add_figure("xyz_view", fig_xyz)
+
+        plot_collection.export(f"{est_name}_{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')}_traj.png",
+                               confirm_overwrite=False,
+                               )
