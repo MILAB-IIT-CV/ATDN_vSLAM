@@ -4,7 +4,7 @@ def distance(V1, V2):
     # SQRT can be potenetially elliminated for preformance purposes
     return ((V1-V2)**2).sum(-1) #.sqrt()
 
-def code_embedding_loss(points, embeddings):
+def embedding_distance_loss(points, embeddings):
     P1, P2, P3 = points
     E1, E2, E3 = embeddings
     
