@@ -20,10 +20,10 @@ SETTINGS.plot_usetex = False
 
 if __name__ == "__main__":
     # arguments
-    # --est: estimated poses
-    # --gt: ground truth poses
-    # --model: current model name
-    # --plot: what plotting mode will be used
+    # --est:            estimated poses
+    # --GT:             ground truth poses
+    # --model_name:     current model name
+    # --plots:          what plotting mode will be used
 
     parser = argparse.ArgumentParser(description="Odometry results plotter")
 
