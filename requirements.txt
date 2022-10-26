@@ -1,7 +1,8 @@
 numpy
-matplotlib
-einops
 torch
 torchvision
+PyYAML
+matplotlib
+einops
 tensorboard
 evo
