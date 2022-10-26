@@ -4,3 +4,4 @@ einops
 torch
 torchvision
 tensorboard
+evo

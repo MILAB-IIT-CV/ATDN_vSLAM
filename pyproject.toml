@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling",
+            "numpy",
+            "torch",
+            "torchvision",
+            "einops",
+            "matplotlib",
+            "tensorboard",
+            "evo"]
+build-backend = "hatchling.build"
+
+[project]
+name = "atdn_vslam"
+version = "0.2.1"
+authors = [
+  { name="György Richárd Bogár", email="bgyricsi@gmail.com" },
+  { name="Mátyás Szántó", email="mszanto@iit.bme.hu" },
+]
+description = "An All-Through Deep Learning-Based Solution for Visual Simultaneous Localization and Mapping "
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Github" = "https://github.com/MILAB-IIT-CV/ATDN_vSLAM"
