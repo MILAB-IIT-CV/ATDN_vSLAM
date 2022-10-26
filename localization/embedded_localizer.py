@@ -5,6 +5,9 @@ from general_layers.conv import Conv, ResidualConv
 
 
 class EmbeddedLocalizer(nn.Module):
+    """
+    Experimental localization module for predicting camera pose from latent space vectors.
+    """
     def __init__(self, in_channels=3, latent_vector_features=2048, channels=[32, 64, 128, 128, 128, 256, 256, 128, 512]):
             super(EmbeddedLocalizer, self).__init__()
 

@@ -7,11 +7,18 @@ from utils.helpers import log
 
 
 class CLVO(nn.Module):
+    """
+    Odometry network of the SLAM system.
+
+    * :param batch_size: Number of data batched as input and output
+    * :param in_channels: Number of channels of input data. Used for easy training experiments.
+    * :param device: Destination device for the model.
+    """
     def __init__(
         self, 
-        batch_size=1, 
-        in_channels=2, 
-        device="cuda:0"
+        batch_size : int = 1, 
+        in_channels : int = 2, 
+        device : str = "cuda:0"
     ):
         super(CLVO, self).__init__()
 
