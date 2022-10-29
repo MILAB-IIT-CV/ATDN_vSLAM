@@ -1,7 +1,7 @@
 import torch
 from torch import dropout, nn
 from torchvision.transforms import Resize
-from general_layers.conv import Conv, ResidualConv, TransposedConv, InterleaveUpscaling, ConnectedUpscale
+from general_layers.conv import Conv, DUC, ConnectedUpscale
 from utils.helpers import log
 
 
@@ -12,7 +12,7 @@ class MappingVAE(nn.Module):
                     channels=[32, 128, 256, 256, 256, 256, 256, 256, 256],
                     target_size=(376, 1241),
                     down_layer = Conv,
-                    up_layer = InterleaveUpscaling):
+                    up_layer = DUC):
 
         super(MappingVAE, self).__init__()
 
@@ -165,7 +165,7 @@ class MappingUnet(nn.Module):
         self.Up6 = UpScale(in_channels=channels[i], out_channels=channels[i-1],  kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], activation=nn.Mish)
         i -= 1
         #self.Up7 = UpScale(in_channels=channels[i], out_channels=channels[i-1],  kernel_size=[3, 3], stride=[1, 1], padding=[1, 1])
-        self.Up7 = InterleaveUpscaling(in_channels=channels[i], out_channels=channels[i-1],  kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], activation=nn.Mish)
+        self.Up7 = DUC(in_channels=channels[i], out_channels=channels[i-1],  kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], activation=nn.Mish)
         i -= 1
         
 

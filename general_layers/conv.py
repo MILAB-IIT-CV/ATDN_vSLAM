@@ -18,8 +18,7 @@ class Conv(nn.Module):
         dilation = 1, 
         padding = 0, 
         activation = nn.Mish, 
-        bias=True,
-        init=False
+        bias=True
     ) -> None:
         super(Conv, self).__init__()
 
@@ -48,8 +47,7 @@ class ResidualConv(nn.Module):
       in_channels, 
       out_channels, 
       stride = 1, 
-      activation = nn.Mish,
-      init = False
+      activation = nn.Mish
     ):
         super(ResidualConv, self).__init__()
 
