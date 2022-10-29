@@ -20,3 +20,4 @@ __init__.py
 setup.py
 docs
 README.rst
+results*.txt
