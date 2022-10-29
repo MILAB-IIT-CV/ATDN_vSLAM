@@ -199,14 +199,17 @@ class FlowKittiDataset(OdometryDataset):
         self, 
         data_path : str, 
         sequences : list = ['00'], 
-        augment : bool = False, 
-        sequence_length : int =4, 
+        augment = False, 
+        sequence_length : int = 4, 
         device : str ='cuda'
     ) -> None:
         super(FlowKittiDataset, self).__init__()
 
         self.sequences = sequences
-        self.augment = 0 if augment else 1
+        if type(augment) is bool:
+            self.augment = 0 if augment else 1
+        else:
+            self.augment = augment
         self.N = sequence_length
         self.device = device
 
@@ -243,6 +246,7 @@ class FlowKittiDataset(OdometryDataset):
 
     def __getitem__(self, index):
             reverse = (self.augment + torch.rand(1)) < 0.5
+            
             #log("Reverse flow augmentation: ", augment)
 
             sequence_index = 0
