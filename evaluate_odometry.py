@@ -1,33 +1,39 @@
+import argparse
+
 # PyTorch imports
 import torch
 
 # Other external package imports
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import tqdm, trange
 
 # Project module imports
 from odometry.vo_datasets import FlowKittiDataset
 from odometry.clvo import CLVO
 from utils.helpers import log, transform
 from utils.arguments import Arguments
-from utils.normalization import FlowStandardization
 
 
-def run_inference(sequence, stage):
+def run_inference(sequence, stage, forward):
+    """
+    Inference runner on a chosen KITTI odometry sequence with a specified learning stage.
+    It is also changeable, wheter to run the inference forward or backward.
+    :param sequence: The choesen KITTI sequence to run inference on
+    :param stage: The chosen learning stage weight to use with the model
+    :param forward: Integer which controls wheter to run inference forward or backward. >=0.5 means forward <-1 mean backward. 
+    In between numbers are causing uniformly random sampled forward and backward.
+    """
     # Instantiating arguments object for optical flow module
     args = Arguments.get_arguments()
+    use_model = False
+    sequence_length = 1
 
     # Instantiating dataset and dataloader
-    batch_size = 16
-    sequence_length = 1
-    dataset = FlowKittiDataset(args.data_path, [sequence], augment=False, sequence_length=1)
+    dataset = FlowKittiDataset(args.data_path, [sequence], augment=forward, sequence_length=sequence_length)
 
     model = CLVO().to(args.device)
     model.load_state_dict(torch.load("checkpoints/clvo_generalization5_" + str(stage) + ".pth", map_location=args.device))
-    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    log("Trainable parameters:", trainable_params)
-
-    normalization =  FlowStandardization().eval()
 
     with torch.no_grad():
         model.to(args.device)
@@ -35,14 +41,22 @@ def run_inference(sequence, stage):
 
         translations = []
         rotations = []
-        #resize = Resize((376, 1248))
-        use_model = True
 
         count = 0
-        for i in range(0, len(dataset), 1):
+        if forward == 1:
+            start = 0
+            end = len(dataset)
+            step = 1*sequence_length
+        else:
+            start = len(dataset)-1
+            end = -1
+            step = -1*sequence_length
+        
+
+        for i in trange(start, end, step):
             flow, rot, tr = dataset[i]
             if use_model:
-                flow = normalization(flow.unsqueeze(0).to(args.device))
+                flow = flow.unsqueeze(0).to(args.device)
 
                 rot, tr = model(flow)
             rot = rot.detach()
@@ -51,21 +65,11 @@ def run_inference(sequence, stage):
             rotations.append(rot)        
             translations.append(tr)
             
-            #for j in range(len(rot)):
-            #    translation = tr[j].squeeze()
-            #    rotation = rot[j].squeeze()
-
-                #translations.append(translation)
-                #rotations.append(rotation)
-
-            print('    ', end='\r')
-            print(count, end='')
             count = count+1
 
-        print()
-        log("Data loading Done!")
-        log("Rot length: ", len(rotations))
-        log("Tr length: ", len(translations))
+        log("Inference Done!")
+        #log("Rot length: ", len(rotations))
+        #log("Tr length: ", len(translations))
 
     return rotations, translations
 
@@ -92,7 +96,7 @@ def rel2abs(rotations, translations):
     return abs_poses
 
 
-def save_results(abs_poses, stage):
+def save_results(abs_poses, stage, need_plot=True):
     # Plotting results
     numpy_poses = []
 
@@ -100,22 +104,30 @@ def save_results(abs_poses, stage):
         numpy_poses.append((np.array(abs_poses[i][:3, :].view(12).numpy())))
     numpy_poses = np.stack(numpy_poses, axis=0)
 
-    np.savetxt("results.txt", numpy_poses)
-    reloaded_poses = np.loadtxt("results.txt")
+    np.savetxt("results_"+str(stage)+".txt", numpy_poses)
 
-    X = np.array([p[3] for p in reloaded_poses])
-    Z = np.array([p[-1] for p in reloaded_poses])
+    X = np.array([p[3] for p in numpy_poses])
+    Z = np.array([p[-1] for p in numpy_poses])
 
-    plt.plot(X, Z)
-    plt.savefig("stage_" + str(stage) + "_eval.png")
+    if need_plot:
+        plt.plot(X, Z)
+        plt.savefig("stage_" + str(stage) + "_eval.png")
 
 
 
-def main():
-    stage = 4
+def main(*arg):
+    
+    parser = argparse.ArgumentParser(description="Evaluation script")
+    parser.add_argument("--stage", type=int)
+    parser.add_argument("--forward", type=int)
+    parser.add_argument("--plot", type=bool, default=True)
+    args = parser.parse_args()
+    
+    if args.stage is None or args.forward is None:
+        raise Exception("Error! No stage given!")
 
-    rotations, translations = run_inference('00', stage)
+    rotations, translations = run_inference('00', args.stage, args.forward)
     abs_poses = rel2abs(rotations, translations)
-    save_results(abs_poses, stage)
+    save_results(abs_poses, args.stage, args.plot)
 
 main()
