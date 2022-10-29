@@ -10,7 +10,6 @@ import torch.utils.tensorboard
 # Project module imports
 from odometry.vo_loss import CLVO_Loss
 from odometry.vo_datasets import FlowKittiDataset
-from utils.normalization import FlowStandardization
 from odometry.clvo import CLVO
 from utils.helpers import log
 from utils.arguments import Arguments
@@ -19,7 +18,7 @@ import math
 
 
 
-def train(args, normalization, model, dataloader, odometry_loss, optimizer, scheduler, writer, epoch, log_vals=[]):
+def train(args, model, dataloader, odometry_loss, optimizer, scheduler, writer, epoch, log_vals=[]):
 
     for batch, (fl, true_rot, true_tr) in enumerate(dataloader):
 
@@ -31,7 +30,6 @@ def train(args, normalization, model, dataloader, odometry_loss, optimizer, sche
             flows = fl[:, j]
 
             flows = flows.squeeze().to(args.device)
-            flows = normalization(flows)
             input_data = flows
 
             pred_rotations, pred_translations = model(input_data)
@@ -72,9 +70,7 @@ def main():
     log("Flow augmentation: ", args.augment_flow)
     # Instantiating dataset and dataloader
     dataset = FlowKittiDataset(args.data_path, sequences=args.train_sequences, augment=args.augment_flow, sequence_length=args.sequence_length)
-    dataloader = DataLoader(dataset=dataset, batch_size=args.batch_size, shuffle=True, num_workers=2, pin_memory=True, drop_last=True)
-
-    normalization =  FlowStandardization().eval()
+    dataloader = DataLoader(dataset=dataset, batch_size=args.batch_size, shuffle=True, num_workers=4, pin_memory=True, drop_last=True)
 
     model = CLVO(args.batch_size, in_channels=2).to(args.device)
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -107,7 +103,6 @@ def main():
         log_vals_actual = []
         
         train(args,
-              normalization,
               model, 
               dataloader, 
               loss, 
