@@ -37,7 +37,7 @@ class CLVO(nn.Module):
         # ----------------------
         # Implicit normalization
         # ----------------------
-        self.normalize_flow = Normalize(mean=[ 1.4125, -0.9003], std=[41.2430, 41.1322])
+        self.normalize_flow = Normalize(mean=[1.4125, -0.9003], std=[41.2430, 41.1322])
 
         # ----------------------------------------------------
         # Feature extractor encoder module for the LSTM module
