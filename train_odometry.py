@@ -77,7 +77,7 @@ def main():
     log("Trainable parameters:", trainable_params)
 
     now = datetime.now()
-    writer = SummaryWriter("loss_log/tensorboard/"+str(now)[:10]+str(now.hour)+str(now.minute))
+    writer = SummaryWriter("results/tensorboard/"+str(now)[:10]+str(now.hour)+str(now.minute))
 
     if args.stage > 1:
         load_path = args.weight_file+str(args.stage-1)+".pth"
