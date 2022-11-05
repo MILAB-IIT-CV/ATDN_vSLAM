@@ -15,12 +15,12 @@ from utils.helpers import log
 from utils.arguments import Arguments
 import numpy as np
 import math
-
+from tqdm import tqdm
 
 
 def train(args, model, dataloader, odometry_loss, optimizer, scheduler, writer, epoch, log_vals=[]):
 
-    for batch, (fl, true_rot, true_tr) in enumerate(dataloader):
+    for batch, (fl, true_rot, true_tr) in tqdm(enumerate(dataloader)):
 
         optimizer.zero_grad()
         loss = 0
@@ -54,8 +54,8 @@ def train(args, model, dataloader, odometry_loss, optimizer, scheduler, writer, 
         writer.add_scalar('Loss', loss.item(), batch+epoch*len(dataloader))
         writer.add_scalar('Learning Rate', scheduler.get_last_lr()[0], batch+epoch*len(dataloader))
         
-        print("", end='\r')
-        print("Iteration: %d / %d \t|\t Loss: %5f" % (batch, len(dataloader), loss.item()), '\t|\t Learning rate: ', scheduler.get_last_lr(),  end='\n')
+        #print("", end='\r')
+        #print("Iteration: %d / %d \t|\t Loss: %5f" % (batch, len(dataloader), loss.item()), '\t|\t Learning rate: ', scheduler.get_last_lr(),  end='\n')
 
 
 def main():
