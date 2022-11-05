@@ -21,3 +21,5 @@ setup.py
 docs
 README.rst
 results*.txt
+/results
+slam.out
