@@ -1,14 +1,6 @@
 [build-system]
-requires = ["hatchling",
-            "numpy",
-            "torch",
-            "torchvision",
-            "PyYAML",
-            "einops",
-            "matplotlib",
-            "tensorboard",
-            "evo"]
-build-backend = "hatchling.build"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "atdn_vslam"

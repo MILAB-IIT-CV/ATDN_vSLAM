@@ -24,3 +24,4 @@ results*.txt
 /results
 slam.out
 kalman_odometry.py
+atdn_vslam.egg-info
