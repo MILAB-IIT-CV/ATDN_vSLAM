@@ -3,8 +3,8 @@ import numpy as np
 from PIL import Image
 import torch
 from torch.utils import data
-from scipy.spatial.transform import Rotation as R
 import glob
+
 
 from utils.helpers import log, matrix2euler
 

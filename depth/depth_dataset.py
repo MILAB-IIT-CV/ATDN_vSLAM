@@ -8,8 +8,10 @@ from torchvision.transforms.transforms import InterpolationMode
 from torchvision.io import read_image
 
 from GMA.core.utils.utils import InputPadder
-from utils.helpers import line2matrix, read_calib
+from utils.transforms import line2matrix
+from utils.depth import read_calib
 from odometry.vo_datasets import OdometryDataset
+
 
 class OdometryDepthDataset(OdometryDataset):
     def __init__(

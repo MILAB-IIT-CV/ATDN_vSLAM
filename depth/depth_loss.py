@@ -1,5 +1,6 @@
 import torch
-from utils.helpers import project_depth, log
+from utils.depth import project_depth
+
 
 class Movement_Depth_Loss():
     def __init__(self, device="cuda:0"):

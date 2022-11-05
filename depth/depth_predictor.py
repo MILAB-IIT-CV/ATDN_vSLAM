@@ -4,6 +4,7 @@ from torch import nn
 from general_layers import conv
 from utils.helpers import log
 
+
 class DepthPredictor(nn.Module):
     def __init__(self) -> None:
         super().__init__()

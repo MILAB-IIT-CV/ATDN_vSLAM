@@ -7,7 +7,7 @@ from GMA.core.utils.utils import InputPadder
 from torchvision.transforms import Resize
 import torchvision.io as io
 
-from utils.helpers import matrix2euler, line2matrix, log
+from utils.transforms import matrix2euler, line2matrix
 
 
 class OdometryDataset(data.Dataset):
@@ -277,6 +277,8 @@ class FlowKittiDataset(OdometryDataset):
             flows = torch.stack(flows, dim=0).squeeze()
             flows = self.resize(flows)
             if reverse:
-                flows = -1.0*torch.flip(flows, dims=[0])
+                flows = -1.0*flows
+                if self.N > 1:
+                    flows = torch.flip(flows, dims=[0])
                 
             return flows, delta_rotations, delta_translations
