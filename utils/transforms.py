@@ -2,7 +2,7 @@ import torch
 
 
 def line2matrix(pose):
-    shape = matrix.shape
+    shape = pose.shape
     if len(shape) == 2:
         matrix = torch.cat([matrix.view((3, 4)), torch.tensor([[0, 0, 0, 1]])], dim=0)
     elif len(shape) == 3:
