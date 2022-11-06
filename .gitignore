@@ -25,3 +25,4 @@ results*.txt
 slam.out
 kalman_odometry.py
 atdn_vslam.egg-info
+.idea

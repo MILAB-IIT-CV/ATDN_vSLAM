@@ -18,11 +18,20 @@ In case you are using this work please cite our paper:
 ```
 
 ## Prerequisites
-- PyTorch: The main Machine Learning library.
-- [GMA](https://github.com/zacjiang/GMA) optical flow library: Used for Deep Learnig based flow estimation (has to be cloned in the SLAM's library to a GMA subfolder. After cloning, imports have to be updated.)
-- For GMA, [einops](https://github.com/arogozhnikov/einops) is also required.
-- Matplotlib: Required to plot the outputs.
-- In the training scripts tensorboard is also used
+1. Clone the repo and go to its library
+```bash
+git clone https://github.com/MILAB-IIT-CV/ATDN_vSLAM.git
+cd ATDN_vSLAM
+```
+2. Clone the [GMA](https://github.com/zacjiang/GMA) optical flow library: Used for Deep Learnig based flow estimation
+```bash
+git clone https://github.com/zacjiang/GMA
+```
+3. After that ATDN vSLAM and its dependencies can be installed locally via
+```bash
+pip install -e .
+```
+
 
 ### Config
 
