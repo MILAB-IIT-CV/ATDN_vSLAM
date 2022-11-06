@@ -35,75 +35,12 @@ class KittiOdometryDataset(OdometryDataset):
     def __init__(
         self, 
         data_path, 
-        sequence, 
-        precomputed_flow=False, 
-        sequence_length=4, 
-        device='cuda'
-    ) -> None:
-        super(KittiOdometryDataset, self).__init__()
-        
-        self.sequence = sequence
-        self.precomputed_flow = precomputed_flow
-        self.N = sequence_length
-        self.device = device
-        self.resize = Resize((376, 1248))
-
-        self.data_path = path.join(data_path, 'dataset')
-
-        self.im_path = path.join(self.data_path, "sequences", sequence, "image_2")
-        self.flow_path = path.join(self.data_path, "flows", sequence)
-        self.poses = np.loadtxt(path.join(self.data_path, 'poses', self.sequence+'.txt'), dtype=np.double)
-        self.poses = torch.from_numpy(self.poses)
-
-        im_file = "000000.png"
-        img = io.read_image(path.join(self.im_path, im_file)).float()
-        self.padder = InputPadder(img.shape)
-        self.len = len(glob.glob(self.im_path+"/*.png"))-self.N
-
-    def __len__(self):
-        return self.len
-
-    def __getitem__(self, index):
-            
-            # Getting pose difference as rotation and translation vectors
-            poses_n = [self.poses[index+i, :] for i in range(0, self.N+1)]
-            delta_transforms = [super(KittiOdometryDataset, self).preprocess_poses_euler(poses_n[i], poses_n[i+1]) for i in range(0, (self.N))]
-
-            # Getting the image file names
-            img_files = ['0'*(6-len(str(index+i))) + str(index+i) + ".png" for i in range(0, self.N+1)]
-
-            imgs = torch.stack([self.padder.pad(io.read_image(path.join(self.im_path, im_file)).float())[0] for im_file in img_files], dim=0)
-            #imgs1 = torch.stack([imgs[i] for i in range(0, (self.N-1))], dim=0)
-            #imgs2 = torch.stack([imgs[i] for i in range(1, self.N)], dim=0)
-            imgs = torch.stack([imgs[i] for i in range(0, self.N+1)], dim=0)
-
-            delta_rotations = [delta_transforms[i][0] for i in range(len(delta_transforms))]
-            delta_translations = [delta_transforms[i][1] for i in range(len(delta_transforms))]
-            delta_rotations = torch.stack(delta_rotations)
-            delta_translations = torch.stack(delta_translations)
-
-
-            if not self.precomputed_flow:
-                #return imgs1, imgs2, delta_rotations, delta_translations
-                return imgs, delta_rotations, delta_translations
-            else:
-                flow_files = ['0'*(6-len(str(index+i))) + str(index+i) + ".pt" for i in range(0, self.N)]
-                flows = [torch.load(path.join(self.flow_path, flow_file)) for flow_file in flow_files]
-                flows = torch.stack(flows, dim=0)
-                
-                return imgs, flows, delta_rotations, delta_translations
-
-
-class CustomKittiOdometryDataset(OdometryDataset):
-    def __init__(
-        self, 
-        data_path, 
         sequences=['00'], 
         precomputed_flow=False, 
         sequence_length=4, 
         device='cuda'
     ) -> None:
-        super(CustomKittiOdometryDataset, self).__init__()
+        super(KittiOdometryDataset, self).__init__()
 
         self.sequences = sequences
         self.precomputed_flow = precomputed_flow
@@ -159,7 +96,7 @@ class CustomKittiOdometryDataset(OdometryDataset):
 
             # Getting pose difference as rotation and translation vectors
             poses_n = [self.sequence_poses[sequence_index][index+i, :] for i in range(0, self.N+1)]
-            delta_transforms = [super(CustomKittiOdometryDataset, self).preprocess_poses_euler(poses_n[i], poses_n[i+1]) for i in range(0, (self.N))]
+            delta_transforms = [super(KittiOdometryDataset, self).preprocess_poses_euler(poses_n[i], poses_n[i+1]) for i in range(0, (self.N))]
             delta_rotations = [delta_transforms[i][0] for i in range(len(delta_transforms))]
             delta_translations = [delta_transforms[i][1] for i in range(len(delta_transforms))]
             delta_rotations = torch.stack(delta_rotations)

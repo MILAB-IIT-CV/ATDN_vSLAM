@@ -4,10 +4,10 @@ import torch
 def line2matrix(pose):
     shape = pose.shape
     if len(shape) == 1:
-        matrix = torch.cat([matrix.view((3, 4)), torch.tensor([[0, 0, 0, 1]])], dim=0)
+        matrix = torch.cat([pose.view((3, 4)), torch.tensor([[0, 0, 0, 1]])], dim=0)
     elif len(shape) == 2:
         seq, _, __ = shape
-        matrix = torch.cat([matrix.view((seq, 3, 4)), torch.tensor([[0, 0, 0, 1]]).repeat((seq, 1, 1))], dim=0)
+        matrix = torch.cat([pose.view((seq, 3, 4)), torch.tensor([[0, 0, 0, 1]]).repeat((seq, 1, 1))], dim=0)
     else:
         raise Exception("Invalid shape for line to matrix transformation")
 
