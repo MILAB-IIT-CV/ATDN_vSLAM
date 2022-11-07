@@ -134,7 +134,7 @@ class NeuralSLAM():
 
     def start_odometry(self):
         """
-        This method is used to start odometry.
+        Start odometry estimation process.
         """
 
         # Checking if current mode is idle
@@ -148,7 +148,8 @@ class NeuralSLAM():
 
     def end_odometry(self):
         """
-        This method is used to end odometry mode, start the mapping process, and after the successful mapping changing to relocalization mode.
+        Finish odometry and start the mapping process. 
+        If the mapping is successful change to relocalization mode.
         """
 
         # Checking if SLAM mode is odometry and if there is any registered keyframes
@@ -189,6 +190,9 @@ class NeuralSLAM():
         It can be used in odometry and relocalization modes.
         In odometry mode input arguments are the current pair of images.
         In relocalization mode the input argument is the image to estimate camera pose from.
+
+        :param args: The argument of the SLAM depening on the actual state detemined by mode.
+        :return: In odometry mode returns the actual odometry estimation. In relocalization mode the closest relocalization estimation is returned.
         """
 
         if self.__mode == "odometry":
@@ -245,7 +249,7 @@ class NeuralSLAM():
 
     def mode(self):
         """
-        Getter for current SLAM mode
+        :return: Actual state of the SLAM state-machine.
         """
 
         return copy.deepcopy(self.__mode)
@@ -253,7 +257,7 @@ class NeuralSLAM():
 
     def to(self, device):
         """
-        Method change device to load deep learning models on
+        Change device to which load deep learning models on.
         """
 
         self.__args.device = device
@@ -266,20 +270,32 @@ class NeuralSLAM():
 
 
     def get_keyframe(self, index):
+        """
+        Get the keyframe of the given index.
+        
+        :param index: Sequential id number of the keyframe
+        """
         return self.__keyframes[index]
 
 
     def __getitem__(self, index):
+        """
+        Square brackets operator for functionality of get_keyframe_
+        """
         return self.__keyframes[index]
 
 
     def __len__(self):
+        """
+        Implementation of the Python len() function.
+        :return: The number of keyframes distinguished during odometry.
+        """
         return len(self.__keyframes)
 
 
     def __decide_keyframe(self, pred_mat) -> bool:
         """
-        Method to decide if current frame is to be registered as a keyframe
+        Decide if current frame is to be registered as a keyframe.
         """
         result = False
 
@@ -296,10 +312,9 @@ class NeuralSLAM():
 
     def __create_map(self):
         """
-        Generating autoencoder based general map
+        Generate autoencoder based latent space map
         """
 
-        # TODO implement training loop for mapping net
         num_epochs = 10
         batch_size = 8
 
@@ -320,7 +335,7 @@ class NeuralSLAM():
         #aug = transforms.Compose([
         #    transforms.ColorJitter(brightness=0.1, saturation=0.1, hue=1e-4),
         #])
-
+        # TODO switch to tqdm
         for i in range(num_epochs):
             print("-------------------- Epoch", i+1, "/", num_epochs, " --------------------")
             
