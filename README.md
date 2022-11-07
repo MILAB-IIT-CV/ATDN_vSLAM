@@ -23,7 +23,7 @@ In case you are using this work please cite our paper:
 git clone https://github.com/MILAB-IIT-CV/ATDN_vSLAM.git
 cd ATDN_vSLAM
 ```
-2. Clone the [GMA](https://github.com/zacjiang/GMA) optical flow library: Used for Deep Learnig based flow estimation
+2. Clone the repo of [GMA](https://github.com/zacjiang/GMA) optical flow model: Used for Deep Learnig based flow estimation
 ```bash
 git clone https://github.com/zacjiang/GMA
 ```

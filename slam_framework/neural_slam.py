@@ -8,7 +8,8 @@ from torch.utils.data import DataLoader
 
 from GMA.core.network import RAFTGMA
 
-from utils.helpers import log, transform, matrix2euler
+from utils.helpers import log
+from utils.transforms import transform, matrix2euler
 from utils.arguments import Arguments
 from utils.gma_parameters import GMA_Parameters
 
@@ -23,12 +24,13 @@ from slam_framework.frame import Frame
 class NeuralSLAM():
     """
     The NeuralSLAM class is the implementation of the Deep Neural SLAM architecture
+    
+    :param args: Arguments including SLAM output path
+    :param odometry_weights: Path to odometry model weights file
+    :param start_mode: Startup state for the SLAM. None means cold start which starts with empty map and odometry
     """
 
     def __init__(self, args : Arguments, odometry_weights : str = None, start_mode : str = None) -> None:
-        """
-        keyframes_base_path: The path to save keyframes to, given as a string.
-        """
 
         # General arguments object, keyframe saving path and SLAM mode
         self.__gma_parameters = GMA_Parameters()

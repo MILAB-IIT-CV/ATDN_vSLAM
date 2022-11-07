@@ -6,9 +6,11 @@ import torch
 
 class ShapeLogLayer(torch.nn.Module):
     """
-    Torch module for seamlessly logging output shapes in a torch.nn.Sequential model
+    Torch module (layer) for seamlessly logging output shapes in a torch.nn.Sequential model
+
+    :param message: Message to print before output shape. Useful to differentiate between prints.
     """
-    def __init__(self, message='') -> None:
+    def __init__(self, message : str = '') -> None:
         super(ShapeLogLayer, self).__init__()
         self.message = message
 
@@ -40,6 +42,11 @@ class BetaScheduler():
 
 
 def log(*messages):
+    """
+    Visually decorate prints
+
+    :param messages: Undefined number of message arguments separated with spaces in the log. Any type of message that can be converted with str() is accepted.
+    """
     messages = [str(message) for message in messages]
     message = messages[0]
 
