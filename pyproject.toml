@@ -1,17 +1,27 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling",]
+build-backend = "hatchling.build"
 
 [project]
 name = "atdn_vslam"
+description = "An All-Through Deep Learning-Based Solution for Visual Simultaneous Localization and Mapping "
+readme = "README.md"
+requires-python = ">=3.7"
 version = "0.2.1"
+dependencies = [
+            "torch",
+            "torchvision",
+            "PyYAML",
+            "matplotlib",
+            "einops",
+            "tensorboard",
+            "evo",
+            tqdm,
+]
 authors = [
   { name="György Richárd Bogár", email="bgyricsi@gmail.com" },
   { name="Mátyás Szántó", email="mszanto@iit.bme.hu" },
 ]
-description = "An All-Through Deep Learning-Based Solution for Visual Simultaneous Localization and Mapping "
-readme = "README.md"
-requires-python = ">=3.7"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
