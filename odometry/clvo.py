@@ -82,28 +82,38 @@ class CLVO(nn.Module):
         self.lstm_states2 = (torch.zeros(self.batch_size, self.lstm_out_size).to(device), 
                              torch.zeros(self.batch_size, self.lstm_out_size).to(device))
 
-        # -------------------------
-        # Odometry estimator module
-        # -------------------------
-        self.translation_regressor = Regressor_MLP(in_features=self.lstm_out_size, 
-                                                   out_features=3, 
-                                                   activation=activation, 
-                                                   bias=False)
+        # --------------------------------------
+        # MLP heads for rotation and translation
+        # --------------------------------------
+        self.translation_regressor = nn.Sequential(
+                nn.Linear(in_features=self.lstm_out_size, out_features=128),
+                nn.Dropout(p=0.2),
+                activation(inplace=True),
+                nn.Linear(in_features=128, out_features=64, bias=True),
+                nn.Dropout(p=0.2),
+                activation(inplace=True),
+                nn.Linear(in_features=64, out_features=3, bias=False)
+        )
 
-        self.rotation_regressor = Regressor_MLP(in_features=self.lstm_out_size, 
-                                                out_features=3, 
-                                                activation=activation, 
-                                                bias=False)
+        self.rotation_regressor = nn.Sequential(
+                nn.Linear(in_features=self.lstm_out_size, out_features=128),
+                nn.Dropout(p=0.2),
+                activation(inplace=True),
+                nn.Linear(in_features=128, out_features=64, bias=True),
+                nn.Dropout(p=0.2),
+                activation(inplace=True),
+                nn.Linear(in_features=64, out_features=3, bias=False)
+        )
 
 
     def forward(self, flows : torch.Tensor):
         """
         The "call" function of the odometry estimator.
 
-        :param flows: Input optical flow values
+        :param flows: Input optical flow values of shape (Batch, 2, Height, Width)
         :type flows: torch.Tensor
         :return: The estimated euler angle rotation vector and estimated translation vector
-        :rtype: torch.Tensor
+        :rtype: torch.Tensor, torch.Tensor
         """
 
         normalized_flows = self.normalize_flow(flows)
@@ -139,43 +149,3 @@ class CLVO(nn.Module):
 
 
     # TODO implement .to() for lstm_states
-
-
-class Regressor_MLP(nn.Module):
-    """
-    Regressor Multilayer Perceptron head of the odometry module.
-    
-    :param in_features: Input feature size
-    :param out_features: Output feature size
-    :param activation: The type of activation function used in the regressor
-    """
-    def __init__(
-        self, 
-        in_features : int, 
-        out_features : int, 
-        activation = nn.PReLU, 
-        bias : bool = True
-    ) -> None:
-        super(Regressor_MLP, self).__init__()
-
-        self.regressor = nn.Sequential(
-            nn.Linear(in_features=in_features, out_features=128),
-            nn.Dropout(p=0.2),
-            activation(inplace=True),
-            nn.Linear(in_features=128, out_features=64, bias=True),
-            nn.Dropout(p=0.2),
-            activation(inplace=True),
-            nn.Linear(in_features=64, out_features=out_features, bias=bias)
-        )
-
-
-    def forward(self, x):
-        """
-        The "call" function of the regressor.
-
-        :param x: The input from the LSTM modules
-        :type x: torch.Tensor
-        :return: The estimated rotation or translation
-        :rtype: torch.Tensor
-        """
-        return self.regressor(x)
