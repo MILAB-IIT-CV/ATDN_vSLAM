@@ -1,5 +1,5 @@
 import torch
-from torch import dropout, nn
+from torch import nn
 from torchvision.transforms import Resize
 from general_layers.conv import Conv, DUC, ConnectedUpscale
 from utils.helpers import log

@@ -6,7 +6,8 @@ from torch.utils import data
 import glob
 
 
-from utils.helpers import log, matrix2euler
+from utils.helpers import log
+from utils.transforms import matrix2euler
 
 class KittiLocalizationDataset(data.Dataset):
     def __init__(self, data_path, sequence, simplify=False, simplification_rate=10):
