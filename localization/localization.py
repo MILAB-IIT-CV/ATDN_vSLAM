@@ -1,80 +1,93 @@
 import torch
 from torch import nn
-from torchvision.transforms import Resize
-from general_layers.conv import Conv, DUC, ConnectedUpscale
+from torchvision.transforms import Resize, Normalize, Compose
+from layers.conv import Conv, ResidualConv, DUC, TransposedConv
+from layers.experimental import SAct
 from utils.helpers import log
+from utils.helpers import ShapeLogLayer
 
 
 class MappingVAE(nn.Module):
-    def __init__(   self, 
-                    in_channels=3, 
-                    latent_vector_features=1024, 
-                    channels=[32, 128, 256, 256, 256, 256, 256, 256, 256],
-                    target_size=(376, 1241),
-                    down_layer = Conv,
-                    up_layer = DUC):
-
+    def __init__(self,
+                 input_type = 'RGB',
+                 variational=False
+    ):
         super(MappingVAE, self).__init__()
 
+        channels=[16, 16, 32, 64, 128, 128, 256]
+        target_size=(376, 1241)
+
+        if input_type == 'RGB':
+            in_channels = 3
+            self.normalization = Compose([Normalize(mean=(0.0, 0.0, 0.0), std=(255.0, 255.0, 255.0)),
+                                          Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))])
+
+        elif input_type == 'HLS':
+            in_channels = 2
+            self.normalization = Normalize(mean=(70.2209, 62.9458), std=(47.7068, 63.5109))
+            #self.normalization = Normalize(mean=(0.0, 0.0), std=(180.0, 255.0))
+
+        elif input_type == 'Depth':
+            in_channels = 1
+            self.normalization = Normalize(mean=(0.4855), std=(0.169))
+
+        elif input_type == 'CD':
+            in_channels = 5
+            # TODO add normalization
+            
+        else:
+            raise ValueError("Unkown input type: "+input_type)
+
+        out_channels = in_channels
+
+        self.var = variational
         self.flattened_shape = 1536
 
-        DownScaler = down_layer
-        UpScaler = up_layer
+        DownScaler = ResidualConv
+        UpScaler = DUC
+        activation = nn.Mish
 
         self.encoder = nn.Sequential(
-            Conv(in_channels=in_channels, out_channels=in_channels, kernel_size=[7, 7], padding=[3, 3], activation=nn.Mish),            
-        
-            DownScaler(in_channels=in_channels, out_channels=channels[0], kernel_size=3, stride=2, padding=0, activation=nn.Mish),
-            DownScaler(in_channels=channels[0], out_channels=channels[1], kernel_size=3, stride=2, padding=0, activation=nn.Mish),
-            DownScaler(in_channels=channels[1], out_channels=channels[2], kernel_size=3, stride=2, padding=0, activation=nn.Mish),
-            DownScaler(in_channels=channels[2], out_channels=channels[3], kernel_size=3, stride=2, padding=0, activation=nn.Mish),
-            DownScaler(in_channels=channels[3], out_channels=channels[4], kernel_size=3, stride=2, padding=0, activation=nn.Mish),
-            #DownScaler(in_channels=channels[4], out_channels=channels[5], kernel_size=3, stride=2, padding=1, activation=nn.Mish),
-            #DownScaler(in_channels=channels[5], out_channels=channels[6], kernel_size=3, stride=3, padding=0, activation=nn.Mish),
-            #DownScaler(in_channels=channels[6], out_channels=channels[7], kernel_size=3, stride=2, padding=1, activation=nn.Mish),
-            #DownScaler(in_channels=channels[7], out_channels=channels[8], kernel_size=3, stride=2, padding=1, activation=nn.Mish),
-            
+            Conv(in_channels=in_channels, out_channels=in_channels, kernel_size=[7, 7], padding=[3, 3], activation=activation),            
+            DownScaler(in_channels=in_channels, out_channels=channels[0], stride=2, activation=activation),
+            DownScaler(in_channels=channels[0], out_channels=channels[1], stride=2, activation=activation),
+            DownScaler(in_channels=channels[1], out_channels=channels[2], stride=2, activation=activation),
+            DownScaler(in_channels=channels[2], out_channels=channels[3], stride=2, activation=activation),
+            DownScaler(in_channels=channels[3], out_channels=channels[4], stride=2, activation=activation),
+            #DownScaler(in_channels=channels[4], out_channels=channels[5], stride=2, activation=activation),
+            #DownScaler(in_channels=channels[5], out_channels=channels[6], stride=3, activation=activation),
             #nn.Flatten(),
-            #nn.Linear(in_features=self.flattened_shape, out_features=latent_vector_features),
-            #nn.PReLU(),
+            #nn.Linear(in_features=3584, out_features=1024),
+            #activation(),
             #nn.Dropout(0.2)
         )
 
-        #self.mean_lin = nn.Linear(in_features=latent_vector_features, out_features=latent_vector_features)
-        #self.sigma_lin = nn.Linear(in_features=latent_vector_features, out_features=latent_vector_features)
-        self.mean_lin = nn.Conv2d(in_channels=channels[4], out_channels=channels[4], kernel_size=[3, 3], stride=[3,  3])
-        self.sigma_lin = nn.Conv2d(in_channels=channels[4], out_channels=channels[4], kernel_size=[3, 3], stride=[3, 3])
-
+        #self.sigma_lin = nn.Conv2d(in_channels=channels[4], out_channels=channels[4], kernel_size=3, stride=1)
+        self.mean_lin  = nn.Conv2d(in_channels=channels[4], out_channels=channels[4], kernel_size=1, stride=1)
+        self.norm = nn.BatchNorm2d(num_features=channels[4])
 
         self.decoder = nn.Sequential(
-            #nn.Linear(in_features=latent_vector_features, out_features=self.flattened_shape),
-            #nn.PReLU(),
-            #nn.Dropout(0.2),
-            #nn.Unflatten(-1, (256, 1, 6)),
-            
-            #UpScaler(in_channels=channels[8], out_channels=channels[7], kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), activation=nn.Mish),
-            #UpScaler(in_channels=channels[7], out_channels=channels[6], kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), activation=nn.Mish),
-            #UpScaler(in_channels=channels[6], out_channels=channels[5], kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), activation=nn.Mish),
-            #UpScaler(in_channels=channels[5], out_channels=channels[4], kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), activation=nn.Mish),
-            UpScaler(in_channels=channels[4], out_channels=channels[3], kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), activation=nn.Mish),
-            UpScaler(in_channels=channels[3], out_channels=channels[2], kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), activation=nn.Mish),
-            UpScaler(in_channels=channels[2], out_channels=channels[1], kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), activation=nn.Mish),
-
-            UpScaler(in_channels=channels[1], out_channels=channels[0], kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), activation=nn.Mish),
-            UpScaler(in_channels=channels[0], out_channels=in_channels, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), activation=nn.Mish),
+            TransposedConv(in_channels=channels[4], out_channels=channels[3], kernel_size=3, stride=2, padding=1),
+            TransposedConv(in_channels=channels[3], out_channels=channels[2], kernel_size=3, stride=2, padding=1),
+            TransposedConv(in_channels=channels[2], out_channels=channels[1], kernel_size=3, stride=2, padding=1),
+            TransposedConv(in_channels=channels[1], out_channels=channels[0], kernel_size=3, stride=2, padding=1),
+            TransposedConv(in_channels=channels[0], out_channels=8, kernel_size=3, stride=2, padding=1),
+            TransposedConv(in_channels=8, out_channels=8, kernel_size=3, stride=2, padding=1),
+            nn.Conv2d(in_channels=8, out_channels=out_channels, kernel_size=3, padding=1),
             Resize(target_size)
         )
 
 
-    def forward(self, image, VAE=False):
-        encoded = self.encoder(image)
+    def forward(self, image):
+        normalized = self.normalization(image)
 
+        encoded = self.encoder(normalized)
         #log("Encoded shape: ", encoded.shape)
         
-        if VAE:
+        if self.var:
             mu = self.mean_lin(encoded)
             logvar = self.sigma_lin(encoded)
-            sigma = torch.exp(0.5*logvar)
+            sigma = torch.exp(torch.tensor(0.5)*logvar)
             eps = torch.randn_like(sigma)
             latent_vector = mu + sigma*eps
         else:
@@ -84,193 +97,21 @@ class MappingVAE(nn.Module):
 
         #log("Mu shape: ", mu.shape)
         #log("Sigma shape: ", sigma.shape)
-        #log("Latent vector shape: ", latent_vector.shape)
-        
-        #decoded = self.decoder(latent_vector)
+        log("Latent vector shape: ", latent_vector.shape)
+        latent_vector = self.norm(latent_vector)
         decoded = self.decoder(latent_vector)
-        #log("Decoded shape: ", decoded.shape)
+        log("Decoded shape: ", decoded.shape)
         
-        return mu, logvar, latent_vector, decoded
+        #return mu, logvar, latent_vector, decoded
+        return decoded
 
 
     def get_code(self, image):
         code = self.encoder(image)
-        return code
+        mu = self.mean_lin(code)
+        normed = self.norm(mu)
+        return mu, code, normed
 
 
     def generate_from_code(self, code):
         return self.decoder(code)
-
-
-# -------------------------------------------------------------------------------------
-
-class MappingUnet(nn.Module):
-    def __init__(   self, 
-                    in_channels=3, 
-                    latent_vector_features=1024, 
-                    channels=[32, 64, 128, 128, 256, 256, 256, 512, 512], 
-                    down_layer = Conv,
-                    up_layer = ConnectedUpscale) -> None:
-        super(MappingUnet, self).__init__()
-
-        DownScale = down_layer
-        UpScale = up_layer
-
-        self.start_conv = Conv(in_channels=in_channels, out_channels=channels[0], kernel_size=[7, 7], padding=[3, 3], activation=nn.Mish)        
-
-        i = 0
-        self.Down1 = DownScale(in_channels=channels[i], out_channels=channels[i+1],  kernel_size=[3, 3], stride=[2, 2], padding=[1, 1], activation=nn.Mish)
-        i = i+1
-        self.Down2 = DownScale(in_channels=channels[i], out_channels=channels[i+1],  kernel_size=[3, 3], stride=[2, 2], padding=[1, 1], activation=nn.Mish)
-        i = i+1
-        self.Down3 = DownScale(in_channels=channels[i], out_channels=channels[i+1],  kernel_size=[3, 3], stride=[2, 2], padding=[1, 1], activation=nn.Mish)
-        i = i+1
-        self.Down4 = DownScale(in_channels=channels[i], out_channels=channels[i+1],  kernel_size=[3, 3], stride=[2, 2], padding=[1, 1], activation=nn.Mish)
-        i = i+1
-        self.Down5 = DownScale(in_channels=channels[i], out_channels=channels[i+1],  kernel_size=[3, 3], stride=[2, 2], padding=[1, 1], activation=nn.Mish)
-        i = i+1
-        self.Down6 = DownScale(in_channels=channels[i], out_channels=channels[i+1],  kernel_size=[3, 3], stride=[2, 2], padding=[1, 1], activation=nn.Mish)
-        i = i+1
-        self.Down7 = DownScale(in_channels=channels[i], out_channels=channels[i+1],  kernel_size=[3, 3], stride=[2, 2], padding=[1, 1], activation=nn.Mish)
-        i = i+1
-        self.bottleneck_in = nn.Sequential(
-            Conv(in_channels=channels[i], out_channels=channels[i+1], kernel_size=[3, 3], stride=[1, 1], padding=[0, 0], activation=nn.Mish),
-            nn.Flatten()
-            )
-
-        flattened_size = 4096
-
-        self.bottleneck_mean = nn.Linear(in_features=flattened_size, out_features=1024)
-        self.bottleneck_sigma = nn.Linear(in_features=flattened_size, out_features=1024)
-
-        self.upscaler_in = nn.Sequential(
-            nn.Linear(in_features=1024, out_features=flattened_size),
-            nn.Dropout(),
-            nn.Mish(inplace=True), 
-            nn.Unflatten(-1, (channels[i], 1, 8)),
-            Conv(in_channels=channels[i+1], out_channels=channels[i], kernel_size=[3, 3], stride=[1, 1], padding=[2, 2], activation=nn.Mish)
-        )
-
-
-        self.Up1 = UpScale(in_channels=channels[i], out_channels=channels[i-1],  kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], activation=nn.Mish)
-        i -= 1
-        self.Up2 = UpScale(in_channels=channels[i], out_channels=channels[i-1],  kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], activation=nn.Mish)
-        i -= 1
-        self.Up3 = UpScale(in_channels=channels[i], out_channels=channels[i-1],  kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], activation=nn.Mish)
-        i -= 1
-        self.Up4 = UpScale(in_channels=channels[i], out_channels=channels[i-1],  kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], activation=nn.Mish)
-        i -= 1
-        self.Up5 = UpScale(in_channels=channels[i], out_channels=channels[i-1],  kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], activation=nn.Mish)
-        i -= 1
-        self.Up6 = UpScale(in_channels=channels[i], out_channels=channels[i-1],  kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], activation=nn.Mish)
-        i -= 1
-        #self.Up7 = UpScale(in_channels=channels[i], out_channels=channels[i-1],  kernel_size=[3, 3], stride=[1, 1], padding=[1, 1])
-        self.Up7 = DUC(in_channels=channels[i], out_channels=channels[i-1],  kernel_size=[3, 3], stride=[1, 1], padding=[1, 1], activation=nn.Mish)
-        i -= 1
-        
-
-        self.final_conv = nn.Conv2d(in_channels=channels[i], out_channels=in_channels, kernel_size=[3, 3], padding=[1, 1])
-        self.final_resize = Resize((376, 1241))
-
-
-    def forward(self, input,  sampled=True):
-        x = self.start_conv(input)
-        
-        shortcut1 = self.Down1(x)
-        shortcut2 = self.Down2(shortcut1)        
-        shortcut3 = self.Down3(shortcut2)        
-        shortcut4 = self.Down4(shortcut3)        
-        shortcut5 = self.Down5(shortcut4)        
-        shortcut6 = self.Down6(shortcut5)        
-        shortcut7 = self.Down7(shortcut6)
-        downscaled = self.bottleneck_in(shortcut7)       
-
-        latent_mean = self.bottleneck_mean(downscaled)
-        latent_logvar = self.bottleneck_sigma(downscaled)
-        latent_sigma = torch.exp(0.5*latent_logvar)
-
-        if sampled:
-            latent_eps = torch.randn_like(latent_sigma)
-            latent_vector = latent_sigma*latent_eps+latent_mean
-        else:
-            latent_vector = latent_mean
-
-        x = self.upscaler_in(latent_vector)
-
-        x = self.Up1(x, shortcut7)
-        x = self.Up2(x, shortcut6)
-        x = self.Up3(x, shortcut5)
-        x = self.Up4(x, shortcut4)
-        x = self.Up5(x, shortcut3)
-        x = self.Up6(x, shortcut2)
-        x = self.Up7(x)
-
-        x = self.final_conv(x)
-        x = self.final_resize(x)
-
-        return latent_mean, latent_logvar, latent_vector, x
-
-
-
-# -------------------------------------------------------------------------------------
-
-
-class PoseRegressor(nn.Module):
-    def __init__(self) -> None:
-        super(PoseRegressor, self).__init__()
-
-        self.encoder = nn.Sequential(
-            Conv(in_channels=128, out_channels=256, kernel_size=(3, 3), stride=[2, 2], padding=[1, 1]),
-            Conv(in_channels=128, out_channels=256, kernel_size=(3, 3), stride=[2, 2], padding=[1, 1]),
-            nn.Flatten(),
-            nn.Linear(in_features=1536, out_features=1024),
-            nn.PReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=1024, out_features=512),
-            nn.PReLU()
-        )
-
-        self.orientation_MLP = nn.Sequential(
-            nn.Linear(in_features=512, out_features=256),
-            nn.PReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=256, out_features=128),
-            nn.PReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=128, out_features=64),
-            nn.PReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=64, out_features=32),
-            nn.PReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=32, out_features=16),
-            nn.PReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=16, out_features=3)
-        )
-
-        self.position_MLP = nn.Sequential(
-            nn.Linear(in_features=512, out_features=256),
-            nn.PReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=256, out_features=128),
-            nn.PReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=128, out_features=64),
-            nn.PReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=64, out_features=32),
-            nn.PReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=32, out_features=16),
-            nn.PReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(in_features=16, out_features=3)
-        )
-
-    def forward(self, input):
-        code = self.encoder(input)
-        orientation = self.orientation_MLP(code)
-        position = self.position_MLP(code)
-        
-        return orientation, position
