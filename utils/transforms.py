@@ -1,7 +1,9 @@
 import torch
 
 
-def line2matrix(pose : torch.Tensor):
+def line2matrix(
+    pose : torch.Tensor
+    ):
     """
     Convert KITTI line format pose to homogenous matrix representation. Batched conversion is supported
 
@@ -20,7 +22,11 @@ def line2matrix(pose : torch.Tensor):
     return matrix
 
 
-def matrix2euler(R : torch.Tensor, convention : str = "yxz", device : str = "cpu"):
+def matrix2euler(
+    R : torch.Tensor, 
+    convention : str = "yxz", 
+    device : str = "cpu"
+    ):
     """
     Convert rotation matrix to euler angles vector based on a given conversion convention
 
@@ -46,7 +52,11 @@ def matrix2euler(R : torch.Tensor, convention : str = "yxz", device : str = "cpu
     return euler
 
 
-def euler2matrix(r : torch.Tensor, convention : str = "yxz", device = "cuda") -> torch.Tensor:
+def euler2matrix(
+    r : torch.Tensor, 
+    convention : str = "yxz", 
+    device = "cuda"
+    ) -> torch.Tensor:
     """
     Convert euler angles to rotation matrix based on the conversion convention
 
@@ -86,7 +96,11 @@ def euler2matrix(r : torch.Tensor, convention : str = "yxz", device = "cuda") ->
     return R
 
 
-def transform(rot : torch.Tensor, tr : torch.Tensor, device="cpu"):
+def transform(
+    rot : torch.Tensor, 
+    tr : torch.Tensor, 
+    device="cpu"
+    ):
     """
     Transform Euler angles vector and translation vector to homogenous matrix
 
@@ -107,10 +121,31 @@ def transform(rot : torch.Tensor, tr : torch.Tensor, device="cpu"):
     return mat
 
 
-# TODO Implement Homogenous Matrix to Euler+Translation conversion
+def abs2rel(
+    pose1 : torch.Tensor, 
+    pose2 : torch.Tensor):
+    """
+    Convert absolute poses to relative pose change
+    """
+
+    pose1 = line2matrix(pose1)
+    pose2 = line2matrix(pose2)
+    
+    inverted1 = torch.inverse(pose1)
+    delta_pose = torch.matmul(inverted1, pose2)
+
+    delta_rot = delta_pose[:3, :3]
+    delta_rotation = matrix2euler(delta_rot)
+
+    delta_translation = delta_pose[:3, -1]
+
+    return [delta_rotation, delta_translation]
 
 
-def rel2abs(rotations : torch.Tensor, translations : torch.Tensor):
+def rel2abs(
+    rotations : torch.Tensor, 
+    translations : torch.Tensor
+    ):
     """
     Convert relative rotation(s) and translation(s) vector representation to absolute scale pose(s)
 
@@ -122,7 +157,7 @@ def rel2abs(rotations : torch.Tensor, translations : torch.Tensor):
 
     instance_num = len(rotations)
     for i in range(instance_num):
-        homogenous.append(transform(rotations[i], translations[i]))
+        homogenous.append(transform(rotations[i].squeeze().double(), translations[i].squeeze().double()))
 
     global_scale = [torch.eye(4, dtype=homogenous[0].dtype)]
     for i in range(0, instance_num):
@@ -132,4 +167,3 @@ def rel2abs(rotations : torch.Tensor, translations : torch.Tensor):
     #global_pos = global_scale[:, :3, -1]
     
     return global_scale
-

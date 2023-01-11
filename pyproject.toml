@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "atdn_vslam"
 description = "An All-Through Deep Learning-Based Solution for Visual Simultaneous Localization and Mapping "
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.6"
 version = "0.2.1"
 dependencies = [
             "torch",
@@ -16,7 +16,7 @@ dependencies = [
             "einops",
             "tensorboard",
             "evo",
-            tqdm,
+            "tqdm",
 ]
 authors = [
   { name="György Richárd Bogár", email="bgyricsi@gmail.com" },

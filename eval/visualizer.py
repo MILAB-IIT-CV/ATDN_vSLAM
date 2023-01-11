@@ -74,7 +74,6 @@ if __name__ == "__main__":
             plot_modes.append(PlotMode.xyz)
             continue
 
-    # print(args)
 
     traj_ref = file_interface.read_kitti_poses_file(args.GT_path[0])
     traj_est = file_interface.read_kitti_poses_file(args.est_path[0])
@@ -83,7 +82,6 @@ if __name__ == "__main__":
 
     count = 0
     results = []
-
     for plot_mode, plot_mode_string in zip(plot_modes, args.plots):
         result = main_ape.ape(traj_ref=traj_ref,
                               traj_est=traj_est,
