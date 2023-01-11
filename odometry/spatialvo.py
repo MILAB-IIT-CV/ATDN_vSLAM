@@ -5,9 +5,10 @@ from layers.conv import Conv, ResidualConv, SimConv, SimResidual
 from layers.linear import Linear, SimLin
 from layers.experimental import AutoCorr
 from utils.helpers import log, ShapeLogLayer
+from layers.experimental import Spatial
 
 
-class CLVO(nn.Module):
+class SpatialVO(nn.Module):
     __doc__="""
     Odometry network of the SLAM system.
     
@@ -19,10 +20,7 @@ class CLVO(nn.Module):
     def __init__(
         self, 
         batch_size : int = 1, 
-        in_channels : int = 2,
-        compressor = True,
-        use_dropout = True,
-        use_layernorm = True,
+        in_channels : int = 2
     ):
         super().__init__()
 
@@ -39,7 +37,6 @@ class CLVO(nn.Module):
         # ----------------------
         #self.normalize_flow = Normalize(mean=[0.0, 0.0], std=[41.2430, 41.1322])
         self.normalize_flow = Normalize(mean=[0.0, 0.0], std=[58.1837, 17.7647])
-        self.polar_norm = nn.BatchNorm2d(num_features=2)
         #self.normalize_depth = Normalize(mean=[0.7178], std=[0.7966])
 
         # ----------------------------------------------------
@@ -47,43 +44,21 @@ class CLVO(nn.Module):
         # ----------------------------------------------------
 
         activation = nn.Mish
-
-        # TODO uppercase suffixes
+        #activation = nn.PReLU
+        use_dropout = True
+        # TODO Try crosscorrelation matmul
         self.suffix = ""
-        if compressor:
-            self.suffix += "c"
-        if use_layernorm:
-            self.suffix += "l"
-        if use_dropout:
-            self.suffix += "d"
-        if self.suffix != "":
-            self.suffix = "_" + self.suffix
 
-        if compressor:
-            self.encoder_CNN = nn.Sequential(
-                nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=1, groups=in_channels),
-                Conv(in_channels=self.in_channels, out_channels=16, kernel_size=7, stride=2, padding=3, activation=activation, bias=True),
-                ResidualConv(in_channels=16, out_channels=16, stride=2, activation=activation),
-                ResidualConv(in_channels=16, out_channels=16, stride=2, activation=activation),
-                ResidualConv(in_channels=16, out_channels=16, stride=2, activation=activation),
-                ResidualConv(in_channels=16, out_channels=16, stride=2, activation=activation),
-                Conv(in_channels=16, out_channels=16, kernel_size=3, stride=3, padding=0, activation=activation),
-                nn.Flatten(),
-                Linear(in_features=832, out_features=512, activation=activation, dropout=use_dropout, norm=use_layernorm)
-            )        
-        else:
-            self.encoder_CNN = nn.Sequential(
-                #nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=1, groups=in_channels),
-                #Conv(in_channels=self.in_channels, out_channels=16, kernel_size=7, stride=2, padding=3, activation=activation, bias=True),
-                ResidualConv(in_channels=self.in_channels, out_channels=4, stride=2, activation=activation),
-                ResidualConv(in_channels=4, out_channels=8, stride=2, activation=activation),
-                ResidualConv(in_channels=8, out_channels=16, stride=2, activation=activation),
-                ResidualConv(in_channels=16, out_channels=16, stride=2, activation=activation),
-                ResidualConv(in_channels=16, out_channels=16, stride=2, activation=activation),
-                ResidualConv(in_channels=16, out_channels=16, stride=2, activation=activation),
-                nn.Flatten(),
-                Linear(in_features=1920, out_features=512, activation=activation, dropout=use_dropout, norm=use_layernorm)
-            )        
+        self.encoder_CNN = nn.Sequential(
+            nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=1, groups=in_channels),
+            Spatial(in_height=376, in_width=1232, out_height=180, out_width=600, hidden=512, channels=2),
+            Spatial(in_height=180, in_width=600, out_height=90, out_width=300, hidden=512, channels=2),
+            Spatial(in_height=90, in_width=300, out_height=45, out_width=150, hidden=256, channels=2),
+            Spatial(in_height=45, in_width=150, out_height=20, out_width=60, hidden=128, channels=2),
+            Spatial(in_height=20, in_width=60, out_height=10, out_width=30, hidden=64, channels=2),
+            nn.Flatten(),
+            Linear(in_features=600, out_features=512, activation=activation, dropout=use_dropout, norm=True)
+        )        
         
         # --------------------------------------------------
         # Blocks of the LSTM (Long Short Term Memory) module
@@ -95,7 +70,7 @@ class CLVO(nn.Module):
         self.lstm1_h = torch.zeros(self.batch_size, self.lstm_out_size)
         self.lstm1_c = torch.zeros(self.batch_size, self.lstm_out_size)
 
-        self.lstm_linear = Linear(in_features=512, out_features=512, activation=activation, dropout=use_dropout, norm=use_layernorm)
+        self.lstm_linear = Linear(in_features=512, out_features=512, activation=activation, dropout=use_dropout, norm=True)
 
         self.lstm2 = nn.LSTMCell(input_size=self.lstm_out_size,
                                  hidden_size=self.lstm_out_size)
@@ -103,21 +78,27 @@ class CLVO(nn.Module):
         self.lstm2_h = torch.zeros(self.batch_size, self.lstm_out_size)
         self.lstm2_c = torch.zeros(self.batch_size, self.lstm_out_size)
 
+        #self.rot_mapper1 = SimLin(in_features=self.lstm_out_size, out_features=256)
+        #self.rotation_corr = AutoCorr(in_features=256, map_size=16)
+
+        #self.tr_mapper1 = SimLin(in_features=self.lstm_out_size, out_features=256)
+        #self.translation_corr = AutoCorr(in_features=256, map_size=16)
+
         # --------------------------------------
         # MLP heads for rotation and translation
         # --------------------------------------
         self.translation_regressor = nn.Sequential(
-                Linear(in_features=self.lstm_out_size, out_features=128, activation=activation, dropout=use_dropout, norm=use_layernorm),
-                Linear(in_features=128, out_features=64, activation=activation, dropout=use_dropout, norm=use_layernorm),
+                Linear(in_features=self.lstm_out_size, out_features=128, activation=activation, dropout=use_dropout, norm=True),
+                Linear(in_features=128, out_features=64, activation=activation, dropout=use_dropout, norm=True),
                 nn.Linear(in_features=64, out_features=3, bias=False)
         )
 
         self.rotation_regressor = nn.Sequential(
-                Linear(in_features=self.lstm_out_size, out_features=128, activation=activation, dropout=use_dropout, norm=use_layernorm),
-                Linear(in_features=128, out_features=64, activation=activation, dropout=use_dropout, norm=use_layernorm),
+                Linear(in_features=self.lstm_out_size, out_features=128, activation=activation, dropout=use_dropout, norm=True),
+                Linear(in_features=128, out_features=64, activation=activation, dropout=use_dropout, norm=True),
                 nn.Linear(in_features=64, out_features=3, bias=False)
         )
-
+        
 
     def forward(self, flows : torch.Tensor):
         """
@@ -129,8 +110,6 @@ class CLVO(nn.Module):
         :rtype: torch.Tensor, torch.Tensor
         """
         normalized_flows = self.normalize_flow(flows)
-        #normalized_polar = self.polar_norm(polar)
-        #normalized = torch.cat([normalized_flows, normalized_polar], dim=-3)
         # ------------------
         # Extracted features
         # ------------------
@@ -144,6 +123,15 @@ class CLVO(nn.Module):
         lstm2_input = self.lstm_linear(self.lstm1_h)
         [self.lstm2_h, self.lstm2_c] = self.lstm2(lstm2_input, [self.lstm2_h, self.lstm2_c])
         lstm_out = self.lstm2_h
+
+        # Autocorr
+        #rot_map = self.rot_mapper1(lstm_out)
+        #rot_autocor = self.rotation_corr(rot_map)
+        #rotation_input = torch.cat([rot_map, rot_autocor], dim=1)
+
+        #tr_map = self.tr_mapper1(lstm_out)
+        #tr_autocor = self.translation_corr(tr_map)
+        #translation_input = torch.cat([tr_map, tr_autocor], dim=1)
 
         # ----------------------------------
         # Odometry module translation branch
@@ -168,3 +156,4 @@ class CLVO(nn.Module):
         self.reset_lstm()
 
         return self
+
