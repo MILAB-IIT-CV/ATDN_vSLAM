@@ -35,7 +35,7 @@ pip install -e .
 
 ### Config
 
- Before using the SLAM, a config.yaml file is required in the utils folder. Here is an example what it should contain:
+ Before using the SLAM, create a config.yaml file in the utils folder. Here is an example what it should contain:
  ```yaml
 !!python/object:utils.arguments.Arguments
 alpha: 1
