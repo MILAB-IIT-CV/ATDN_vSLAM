@@ -17,7 +17,7 @@ In case you are using this work please cite our paper:
 }
 ```
 
-## Prerequisites
+## Setup
 1. Clone the repo and go to its library
 ```bash
 git clone https://github.com/MILAB-IIT-CV/ATDN_vSLAM.git
