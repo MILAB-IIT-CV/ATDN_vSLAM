@@ -16,7 +16,7 @@ from utils.gma_parameters import GMA_Parameters
 from odometry.clvo import CLVO
 
 from localization.localization import MappingVAE
-from localization.datasets import MappingDataset
+from localization.datasets import MappingDataset # TODO use new dataset
 
 from slam_framework.frame import Frame
 
