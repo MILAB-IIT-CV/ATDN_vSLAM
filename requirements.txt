@@ -6,3 +6,4 @@ matplotlib
 einops
 tensorboard
 evo
+opencv-python
