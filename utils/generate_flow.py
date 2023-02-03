@@ -4,7 +4,7 @@ from GMA.core.network import RAFTGMA
 from utils.gma_parameters import GMA_Parameters
 from utils.arguments import Arguments
 from utils.helpers import log
-from odometry.vo_datasets import KittiOdometryDataset
+from odometry.datasets import KittiOdometryDataset
 
 gma_parameters = GMA_Parameters()
 args = Arguments.get_arguments()

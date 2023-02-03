@@ -9,8 +9,8 @@ from torch.utils.tensorboard.writer import SummaryWriter
 import torch.utils.tensorboard
 
 # Project module imports
-from odometry.vo_loss import CLVO_Loss
-from odometry.vo_datasets import FlowKittiDataset2, FlowKittiDataset3
+from odometry.loss import CLVO_Loss
+from odometry.datasets import FlowKittiDataset2, FlowKittiDataset3
 
 from odometry.tvo import TVO
 

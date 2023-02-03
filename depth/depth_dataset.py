@@ -10,7 +10,7 @@ from torchvision.io import read_image
 from GMA.core.utils.utils import InputPadder
 from utils.transforms import line2matrix
 from utils.depth import read_calib
-from odometry.vo_datasets import OdometryDataset
+from odometry.datasets import OdometryDataset
 
 
 class OdometryDepthDataset(OdometryDataset):

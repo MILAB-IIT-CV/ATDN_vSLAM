@@ -10,7 +10,7 @@ import numpy as np
 from tqdm import tqdm, trange
 
 # Project module imports
-from odometry.vo_datasets import FlowKittiDataset
+from odometry.datasets import FlowKittiDataset
 from odometry.clvo import CLVO
 from utils.helpers import log, transform
 from utils.arguments import Arguments
