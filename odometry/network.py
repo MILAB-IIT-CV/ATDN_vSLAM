@@ -7,7 +7,7 @@ from layers.experimental import AutoCorr
 from utils.helpers import log, ShapeLogLayer
 
 
-class CLVO(nn.Module):
+class ATDNVO(nn.Module):
     __doc__="""
     Odometry network of the SLAM system.
     

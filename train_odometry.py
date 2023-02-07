@@ -12,7 +12,7 @@ import torch.utils.tensorboard
 from odometry.loss import CLVO_Loss
 from odometry.datasets import FlowKittiDataset2, FlowKittiDataset3
 
-from odometry.clvo import CLVO
+from odometry.network import ATDNVO
 from odometry.lightvo import LightVO
 from odometry.symvo import SymVO
 from odometry.spatialvo import SpatialVO
@@ -99,7 +99,7 @@ def main():
                             drop_last=True)
 
     # TODO add other model constructors
-    #model = CLVO(args.batch_size, in_channels=2).to(args.device)
+    #model = ATDNVO(args.batch_size, in_channels=2).to(args.device)
     #model = SymVO(args.batch_size, in_channels=2).to(args.device)
     #model = LightVO(args.batch_size, in_channels=2).to(args.device)
     model = LSCVO(args.batch_size, in_channels=2).to(args.device)

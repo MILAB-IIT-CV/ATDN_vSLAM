@@ -11,7 +11,7 @@ from tqdm import tqdm, trange
 
 # Project module imports
 from odometry.datasets import FlowKittiDataset
-from odometry.clvo import CLVO
+from odometry.network import ATDNVO
 from utils.helpers import log, transform
 from utils.arguments import Arguments
 
@@ -33,7 +33,7 @@ def run_inference(sequence, exp, stage, forward):
     # Instantiating dataset and dataloader
     dataset = FlowKittiDataset(args.data_path, [sequence], augment=forward, sequence_length=sequence_length)
 
-    model = CLVO().to(args.device)
+    model = ATDNVO().to(args.device)
     model.load_state_dict(torch.load("checkpoints/clvo_generalization"+str(exp)+"_" + str(stage) + ".pth", map_location=args.device))
     eval_time = 0.0
 

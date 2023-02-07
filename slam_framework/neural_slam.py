@@ -13,7 +13,7 @@ from utils.transforms import transform, matrix2euler
 from utils.arguments import Arguments
 from utils.gma_parameters import GMA_Parameters
 
-from odometry.clvo import CLVO
+from odometry.network import ATDNVO
 
 from localization.localization import MappingVAE
 from localization.datasets import MappingDataset # TODO use new dataset
@@ -49,7 +49,7 @@ class NeuralSLAM():
         self.__flow_net.eval()
         
         # Creating model and loading weights for odometry estimator
-        self.__odometry_net = CLVO(batch_size=args.batch_size).to(self.__args.device)
+        self.__odometry_net = ATDNVO(batch_size=args.batch_size).to(self.__args.device)
         self.__odometry_net.load_state_dict(torch.load(odometry_weights, map_location=self.__args.device))
         self.__odometry_net.eval()
 
