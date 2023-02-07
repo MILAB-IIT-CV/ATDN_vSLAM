@@ -1,6 +1,7 @@
 import os
 import glob
 import copy
+import tqdm
 
 import torch
 import torch.nn.functional as F
@@ -335,8 +336,7 @@ class NeuralSLAM():
         #aug = transforms.Compose([
         #    transforms.ColorJitter(brightness=0.1, saturation=0.1, hue=1e-4),
         #])
-        # TODO switch to tqdm
-        for i in range(num_epochs):
+        for i in tqdm(num_epochs):
             print("-------------------- Epoch", i+1, "/", num_epochs, " --------------------")
             
             for batch, im in enumerate(dataloader):
