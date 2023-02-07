@@ -319,7 +319,7 @@ class NeuralSLAM():
         num_epochs = 10
         batch_size = 8
 
-        dataset = ColorDataset(self.__keyframes_base_path)  # TODO sequence hardcoded to 00
+        dataset = ColorDataset(self.__keyframes_base_path)
 
         # Creating model for mapping net
         target_shape = (dataset[0].shape[-2], dataset[0].shape[-1])

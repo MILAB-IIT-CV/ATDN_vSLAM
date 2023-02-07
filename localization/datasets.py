@@ -16,7 +16,7 @@ class ColorDataset(data.Dataset):
     def __init__(
         self,
         data_path,
-        sequence="00",
+        sequence=None,
         hls = False,
         division = 1
     ) -> None:
@@ -24,8 +24,11 @@ class ColorDataset(data.Dataset):
 
         self.division = division
         self.hls = hls
+        if sequence is None:
+            self.data_path = data_path
+        else:
+            self.data_path = path.join(data_path, 'dataset', 'sequences', sequence, 'image_2')
 
-        self.data_path = path.join(data_path, 'dataset', 'sequences', sequence, 'image_2')
         self.len = len(glob.glob(path.join(self.data_path, "*.png")))
         if division > 1:
             temp_len = self.len//division
