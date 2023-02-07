@@ -16,7 +16,7 @@ class ColorDataset(data.Dataset):
     def __init__(
         self,
         data_path,
-        sequence,
+        sequence="00",
         hls = False,
         division = 1
     ) -> None:

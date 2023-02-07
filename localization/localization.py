@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torchvision.transforms import Resize, Normalize, Compose
 from layers.conv import Conv, ResidualConv, DUC, TransposedConv
-from layers.experimental import SAct
+# from layers.experimental import SAct
 from utils.helpers import log
 from utils.helpers import ShapeLogLayer
 

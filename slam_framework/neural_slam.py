@@ -17,7 +17,7 @@ from utils.gma_parameters import GMA_Parameters
 from odometry.network import ATDNVO
 
 from localization.localization import MappingVAE
-from localization.datasets import MappingDataset # TODO use new dataset
+from localization.datasets import ColorDataset
 
 from slam_framework.frame import Frame
 
@@ -319,11 +319,11 @@ class NeuralSLAM():
         num_epochs = 10
         batch_size = 8
 
-        dataset = MappingDataset(self.__keyframes_base_path, slam=True)
+        dataset = ColorDataset(self.__keyframes_base_path)  # TODO sequence hardcoded to 00
 
         # Creating model for mapping net
         target_shape = (dataset[0].shape[-2], dataset[0].shape[-1])
-        self.__mapping_net = MappingVAE(target_size=target_shape).to(self.__args.device).train()
+        self.__mapping_net = MappingVAE().to(self.__args.device).train()
 
         rgb_mean = self.__rgb_mean
         rgb_sigma = self.__rgb_std
