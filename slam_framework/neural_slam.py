@@ -1,7 +1,7 @@
 import os
 import glob
 import copy
-import tqdm
+from tqdm import tqdm
 
 import torch
 import torch.nn.functional as F
