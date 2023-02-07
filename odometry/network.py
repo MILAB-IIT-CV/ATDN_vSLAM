@@ -1,9 +1,9 @@
 import torch
 from torch import nn
 from torchvision.transforms import Normalize
-from layers.conv import Conv, ResidualConv, SimConv, SimResidual
-from layers.linear import Linear, SimLin
-from layers.experimental import AutoCorr
+from layers.conv import Conv, ResidualConv
+from layers.linear import Linear
+
 from utils.helpers import log, ShapeLogLayer
 
 
