@@ -10,7 +10,7 @@ import torch.utils.tensorboard
 
 # Project module imports
 from odometry.loss import CLVO_Loss
-from odometry.datasets import FlowKittiDataset2, FlowKittiDataset3
+from odometry.datasets import FlowKittiDataset3
 
 from odometry.network import ATDNVO
 from odometry.lightvo import LightVO
