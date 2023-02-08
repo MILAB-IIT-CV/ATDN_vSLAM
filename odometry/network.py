@@ -21,8 +21,8 @@ class ATDNVO(nn.Module):
         batch_size : int = 1, 
         in_channels : int = 2,
         compressor = True,
-        use_dropout = True,
-        use_layernorm = True,
+        use_dropout = False,
+        use_layernorm = False,
     ):
         super().__init__()
 
