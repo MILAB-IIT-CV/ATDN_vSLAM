@@ -24,8 +24,7 @@ def line2matrix(
 
 def matrix2euler(
     R : torch.Tensor, 
-    convention : str = "yxz", 
-    device : str = "cpu"
+    convention : str = "yxz"
     ):
     """
     Convert rotation matrix to euler angles vector based on a given conversion convention
@@ -48,14 +47,13 @@ def matrix2euler(
         beta = torch.atan2(torch.sqrt(1-R[1, 1]**2), R[1, 1])
         gamma = torch.atan2(R[1, 0], -R[1, 2])
 
-    euler = torch.tensor([alpha, beta, gamma], device=device)
+    euler = torch.tensor([alpha, beta, gamma], device=R.device)
     return euler
 
 
 def euler2matrix(
     r : torch.Tensor, 
-    convention : str = "yxz", 
-    device = "cuda"
+    convention : str = "yxz"
     ) -> torch.Tensor:
     """
     Convert euler angles to rotation matrix based on the conversion convention
@@ -80,15 +78,15 @@ def euler2matrix(
     if convention == "yxz":
         R = torch.tensor([  [c1*c3 + s1*s2*s3,  c3*s1*s2 - c1*s3,   c2*s1],
                             [c2*s3,             c2*c3,              -s2],
-                            [c1*s2*s3 - c3*s1,  c1*c3*s2+s1*s3,     c1*c2]], device=device)
+                            [c1*s2*s3 - c3*s1,  c1*c3*s2+s1*s3,     c1*c2]], device=r.device)
     elif convention == "xyx":
         R = torch.tensor([  [c2,                s2*s3,          c3*s2],
                             [s1*s2,             c1*c3-c2*s1*s3, -c3*s3-c2*c3*s1],
-                            [-c1*s2,            c3*s1+c1*c2*s3, c1*c2*c3-s1*s3]], device=device)
+                            [-c1*s2,            c3*s1+c1*c2*s3, c1*c2*c3-s1*s3]], device=r.device)
     elif convention == "yxy":
         R = torch.tensor([  [c1*c3-c2*s1*s3,    s2*s1,          c2*s1*s1+c1*s3],
                             [s2*s3,             c2,             -s2*c3],
-                            [-c3*s1-c2*c1*s3,   s2*c1,          c2*c1*c3-s1*s3]], device=device)
+                            [-c3*s1-c2*c1*s3,   s2*c1,          c2*c1*c3-s1*s3]], device=r.device)
 
     if R is None:
         raise Exception("Convention " + str(convention) + " is not supported")
@@ -98,8 +96,7 @@ def euler2matrix(
 
 def transform(
     rot : torch.Tensor, 
-    tr : torch.Tensor, 
-    device="cpu"
+    tr : torch.Tensor
     ):
     """
     Transform Euler angles vector and translation vector to homogenous matrix
@@ -109,14 +106,15 @@ def transform(
     :param device: Device to map output to.
     :return: Homogenous transformation matrix of shape (4, 4)
     """
+    
     # Euler to matrix rotation representation
-    rot = euler2matrix(rot, device=device)
-
+    rot = euler2matrix(rot) # size: (3, 3)
+    
     # Concatenating rotation matrix and translation vector
-    mat = torch.cat([rot, tr.unsqueeze(1).to(device)], dim=1)
+    mat = torch.cat([rot, tr.unsqueeze(1).to(rot.device)], dim=1)
 
     # Adding the extra row for homogenous matrix
-    mat = torch.cat([mat, torch.tensor([[0, 0, 0, 1]], device=device)], dim=0)
+    mat = torch.cat([mat, torch.tensor([[0, 0, 0, 1]], device=rot.device)], dim=0)
 
     return mat
 
