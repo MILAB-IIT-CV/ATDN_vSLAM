@@ -10,14 +10,9 @@ import torch.utils.tensorboard
 
 # Project module imports
 from odometry.loss import CLVO_Loss
-from odometry.datasets import FlowKittiDataset3
+from odometry.datasets import FlowKittiDataset2, FlowKittiDataset3
 
 from odometry.network import ATDNVO
-from odometry.lightvo import LightVO
-from odometry.symvo import SymVO
-from odometry.spatialvo import SpatialVO
-from odometry.rspvo import ResidualSpatialVO
-from odometry.lsc_vo import LSCVO
 
 from utils.helpers import log
 from utils.arguments import Arguments
@@ -84,7 +79,7 @@ def main():
     log("Data path: ", args.data_path)
     
     # Instantiating dataset and dataloader
-    dataset = FlowKittiDataset3(args.data_path, 
+    dataset = FlowKittiDataset2(args.data_path, 
                                sequences=args.train_sequences, 
                                augment=args.augment_flow, 
                                sequence_length=args.sequence_length)
@@ -98,11 +93,8 @@ def main():
                             #prefetch_factor=2,
                             drop_last=True)
 
-    # TODO add other model constructors
-    #model = ATDNVO(args.batch_size, in_channels=2).to(args.device)
-    #model = SymVO(args.batch_size, in_channels=2).to(args.device)
-    #model = LightVO(args.batch_size, in_channels=2).to(args.device)
-    model = LSCVO(args.batch_size, in_channels=2).to(args.device)
+
+    model = ATDNVO(args.batch_size, in_channels=2).to(args.device)
 
     print(model)
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)

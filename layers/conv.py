@@ -1,7 +1,6 @@
 from torchvision.transforms import Resize
 from torch import nn
 import torch
-from layers.experimental import Symmetric
 
 
 class Conv(nn.Module):
