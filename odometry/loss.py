@@ -110,6 +110,6 @@ class CLVO_Loss():
         norm_rotation = (diff_rotation**2).sum(dim=-1)
         norm_translation = (diff_translation**2).sum(dim=-1)
 
-        loss = self.delta*norm_translation + self.khi*norm_rotation
+        loss = (self.delta*norm_translation) + (self.khi*norm_rotation)
         return loss
 
