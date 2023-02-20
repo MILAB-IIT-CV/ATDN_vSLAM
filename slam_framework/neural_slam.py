@@ -67,8 +67,8 @@ class NeuralSLAM():
         # Propetries for odometry propagation
         self.__keyframes = []
         self.__last_keyframe = None
-        self.__transform_propagation_matrix = torch.eye(4, dtype=torch.float32, device=self.__args.device)
-        self.__current_pose = torch.eye(4, dtype=torch.float32, device=self.__args.device)
+        self.__transform_propagation_matrix = torch.eye(4, dtype=torch.float32)
+        self.__current_pose = torch.eye(4, dtype=torch.float32)
 
         # Keyframe registration parameters
         rot_threshold_deg = 10
@@ -77,7 +77,7 @@ class NeuralSLAM():
 
         # Startup for relocalization only
         if start_mode == "mapping":
-            homogenous = torch.tensor([0.0, 0.0, 0.0, 1.0], device=self.__args.device).view(1, 1, 4)
+            homogenous = torch.tensor([0.0, 0.0, 0.0, 1.0]).view(1, 1, 4)
             poses = torch.load(self.__args.keyframes_path + "/poses.pth")
             poses = torch.cat([poses.view(len(poses), 3, 4), homogenous.repeat(len(poses), 1, 1)], dim=1)
 
@@ -92,7 +92,7 @@ class NeuralSLAM():
             self.__mapping_net = MappingVAE().to(self.__args.device).eval()
             self.__mapping_net.load_state_dict(torch.load(self.__keyframes_base_path + "/MappingVAE_weights.pth"))
             
-            homogenous = torch.tensor([0.0, 0.0, 0.0, 1.0], device=self.__args.device).view(1, 1, 4)
+            homogenous = torch.tensor([0.0, 0.0, 0.0, 1.0]).view(1, 1, 4)
             poses = torch.load(self.__args.keyframes_path + "/poses.pth")
             poses = torch.cat([poses.view(len(poses), 3, 4), homogenous.repeat(len(poses), 1, 1)], dim=1)
             
@@ -203,7 +203,7 @@ class NeuralSLAM():
                     # Estimating odometry
                     _, flow = self.__flow_net(im1.unsqueeze(0), im2.unsqueeze(0), iters=12, test_mode=True)                
                     pred_rot, pred_tr = self.__odometry_net(flow)
-                    pred_mat = transform(pred_rot.squeeze(), pred_tr.squeeze())
+                    pred_mat = transform(pred_rot.squeeze(), pred_tr.squeeze()).to("cpu")
                     
                     # Calculating current pose with previous actual pose and new odometry estimation
                     self.__current_pose = self.__current_pose @ pred_mat
@@ -299,7 +299,7 @@ class NeuralSLAM():
 
         if (torch.norm(rotation) > self.__rotation_threshold) or (torch.norm(translation) > self.__translation_threshold):
             result = True
-            self.__transform_propagation_matrix = torch.eye(4, dtype=torch.float32, device=self.__args.device)
+            self.__transform_propagation_matrix = torch.eye(4, dtype=torch.float32)
 
         return result
 
@@ -398,6 +398,6 @@ class NeuralSLAM():
         # Calculating optical flow values
         _, flow = self.__flow_net(im1, im2, iters=12, test_mode=True) # TODO check unsqueeze
         pred_rot, pred_tr = self.__odometry_net(flow)
-        pred_mat = transform(pred_rot.squeeze(), pred_tr.squeeze())
+        pred_mat = transform(pred_rot.squeeze(), pred_tr.squeeze()).to("cpu")
 
         return pred_mat
