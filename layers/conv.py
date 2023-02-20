@@ -1,4 +1,5 @@
 from torchvision.transforms import Resize
+from torchvision.transforms import functional as TF
 from torch import nn
 import torch
 
@@ -67,9 +68,7 @@ class ResidualConv(nn.Module):
             bias=True)
         )
 
-        #self.max_pool = nn.MaxPool2d(kernel_size=3, stride=stride, padding=1)
-        #self.min_pool = nn.MaxPool2d(kernel_size=3, stride=stride, padding=1)
-
+        # TODO try strided avg pooling + conv w/o stride
         self.skip_layer = nn.Conv2d(in_channels=in_channels, 
                                     out_channels=out_channels, 
                                     kernel_size=1, 
@@ -83,16 +82,12 @@ class ResidualConv(nn.Module):
 
     def forward(self, input):
         x = self.conv(input)
-        
-        #max_skip = self.max_pool(input)
-        #min_skip = -1.0*self.min_pool(-1.0*input)
-        #skip = torch.cat([max_skip, min_skip], dim=1)
-        #skip = self.skip_layer(skip)
+
         skip = self.skip_layer(input)
+       
+        x = self.out_block(x + skip)
         
-        x = x + skip
-        
-        return self.out_block(x)
+        return x
 
 
 class TransposedConv(nn.Module):
@@ -113,26 +108,35 @@ class TransposedConv(nn.Module):
         super().__init__()
 
         self.conv = nn.Sequential(
-                nn.ConvTranspose2d(in_channels=in_channels, 
+                Conv(in_channels=in_channels,
+                     out_channels=out_channels, 
+                     kernel_size=3, 
+                     padding=1,
+                     activation=activation2,
+                     bias=True),
+                nn.ConvTranspose2d(in_channels=out_channels, 
                                    out_channels=out_channels, 
                                    kernel_size=kernel_size, 
                                    stride=stride,
                                    padding=padding,
                                    output_padding=output_padding,
-                                   bias=False),
+                                   bias=True),
                 activation1(),
-                nn.BatchNorm2d(num_features=out_channels),
-                Conv(in_channels=out_channels,
-                     out_channels=out_channels, 
-                     kernel_size=3, 
-                     padding=1,
-                     activation=activation2,
-                     bias=False)
+                nn.BatchNorm2d(num_features=out_channels)
             )
+
+        self.skip_layer = nn.Conv2d(in_channels=in_channels, out_channels=out_channels,  kernel_size=1)
+        self.out_layer = nn.Sequential(
+            nn.Mish(),
+            nn.BatchNorm2d(num_features=out_channels))
 
 
     def forward(self, input):
-        return self.conv(input)
+        direct = self.conv(input)
+        skip = self.skip_layer(TF.resize(input, list(direct.size()[-2:])))
+        out = direct + skip
+        out = self.out_layer(out)
+        return out
 
 
 class DUC(nn.Module):
