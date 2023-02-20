@@ -62,7 +62,6 @@ train_sequences:
 - '10'
 wd: 0.001
 augment_flow: false
-precomputed_flow: true
 w : 2
 
  ```
