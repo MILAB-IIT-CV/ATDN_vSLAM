@@ -68,4 +68,4 @@ w : 2
  ```
 ## Usage
 
-For a detailed introduction to the system usage, please check our [tutorial](utils/tutorial.md).
+For a detailed introduction to the system usage, please check our [tutorial](tutorial.md).
