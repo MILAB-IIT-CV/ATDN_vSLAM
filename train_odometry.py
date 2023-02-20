@@ -44,20 +44,17 @@ def train(args, model, dataloader, odometry_loss, optimizer, scheduler, writer, 
             rots.append(pred_rotations)
             trs.append(pred_translations)
 
-        pred_rots = torch.stack(rots, dim=1).double()
-        pred_trs = torch.stack(trs, dim=1).double()
+        pred_rots = torch.stack(rots, dim=1)
+        pred_trs  = torch.stack(trs,  dim=1)
 
-        loss = odometry_loss(pred_rots, pred_trs, true_rot, true_tr, device=args.device).float()
-
-        log_vals.append(loss.item())
+        loss = odometry_loss(pred_rots, pred_trs, true_rot, true_tr, device=args.device)
 
         loss.backward()
-
         optimizer.step()
         scheduler.step()
-        
         model.reset_lstm()
         
+        log_vals.append(loss.item())
         writer.add_scalar('Loss', loss.item(), batch+epoch*len(dataloader))
         writer.add_scalar('Learning Rate', scheduler.get_last_lr()[0], batch+epoch*len(dataloader))
         
@@ -72,6 +69,7 @@ def main():
 
     # Setting random seed
     torch.manual_seed(4265664478)
+    #torch.use_deterministic_algorithms(True)
     
     # Instantiating arguments object for optical flow module
     args = Arguments.get_arguments()
@@ -79,7 +77,7 @@ def main():
     log("Data path: ", args.data_path)
     
     # Instantiating dataset and dataloader
-    dataset = FlowKittiDataset2(args.data_path, 
+    dataset = FlowKittiDataset3(args.data_path, 
                                sequences=args.train_sequences, 
                                augment=args.augment_flow, 
                                sequence_length=args.sequence_length)
@@ -116,9 +114,15 @@ def main():
     loss = CLVO_Loss(args.alpha, w=args.w)
 
     # Tensorboard
+    if not os.path.exists("log"):
+        os.mkdir("log")
+        os.mkdir("log/odometry")
+    if not os.path.exists("log/odometry"):
+        os.mkdir("log/odometry")
+        
     now = datetime.now()
     model_code = str(model.__class__.__name__) + model.suffix
-    writer = SummaryWriter("log/tensorboard/"+str(now.month)+'_'+str(now.day)+'_'+str(now.hour)+'_'+str(now.minute)+'('+model_code+')')
+    writer = SummaryWriter("log/odometry/"+str(now.month)+'_'+str(now.day)+'_'+str(now.hour)+'_'+str(now.minute)+'('+model_code+')')
 
     print("============================================ ", "Training", " =============================================\n")
     for epoch in range(args.epochs):
