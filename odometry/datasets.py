@@ -9,14 +9,46 @@ from utils.transforms import matrix2euler, line2matrix, abs2rel
 from tqdm import trange
 
 
+class KittiOdometryDataset(data.Dataset):
+    """
+    Dataset for RGB image and absolute pose
+    """
+    def __init__(
+        self,
+        data_path : str,
+        sequence : str
+    ):
+        super().__init__()
+        
+        self.poses = torch.from_numpy(np.loadtxt(path.join(data_path, "dataset", "poses", sequence+".txt")))
+        self.rgb_files = sorted(glob.glob(path.join(data_path, "dataset", "sequences", sequence, "image_2/*.png")))
+
+        assert len(self.poses) == len(self.rgb_files), "Number of poses and images are not the same"
+
+    def __len__(self):
+        return len(self.poses)
+
+
+    def __getitem__(self, index):
+        image = io.read_image(self.rgb_files[index])
+        
+        pose = line2matrix(self.poses[index])
+        rot = matrix2euler(pose[:3, :3])
+        tr = pose[:3, -1]
+
+        return image, rot, tr
+
+
 class FlowKittiDataset2(data.Dataset):
+    """
+    Dataset for 16 bit half precision optical flow and delta transforms
+    """
     def __init__(
         self, 
         data_path : str, 
         sequences : list = ['00'], 
         augment = False, 
-        sequence_length : int = 4, 
-        device : str ='cuda'
+        sequence_length : int = 4
     ) -> None:
         super().__init__()
 
@@ -26,7 +58,6 @@ class FlowKittiDataset2(data.Dataset):
         else:
             self.augment = augment
         self.N = sequence_length
-        self.device = device
 
         self.data_path = path.join(data_path, 'dataset')
         self.sequence_lengths = [0]
@@ -49,8 +80,6 @@ class FlowKittiDataset2(data.Dataset):
 
         self.sequence_lengths = self.sequence_lengths[1:]
         assert len(sequences) == len(self.sequence_lengths), "Sequence lengths are not as many as sequences"
-
-        img = io.read_image(path.join(self.data_path, "sequences", '00', "image_2", "000000.png")).float()
 
 
     def __len__(self):
@@ -87,10 +116,11 @@ class FlowKittiDataset2(data.Dataset):
         flow_files = ['0'*(6-len(str(index+i))) + str(index+i) + ".pt" for i in range(0, self.N)]
         flows = [torch.load(path.join(flow_path, flow_file)) for flow_file in flow_files]
         flows = torch.cat(flows, dim=0)
-
+        
         if flows.size()[-1] > 1232:
             diff = flows.size()[-1]-1232
-            flows = flows[:, :, :, diff//2:-diff//2].squeeze()
+            flows = flows[:, :, :, diff//2:-diff//2]
+        flows = flows.squeeze()
 
         if reverse:
             flows = -1.0*flows
@@ -101,13 +131,15 @@ class FlowKittiDataset2(data.Dataset):
 
 
 class FlowKittiDataset3(data.Dataset):
+    """
+    Dataset for 16 bit half precision optical flow loaded into CPU memory and delta transforms
+    """
     def __init__(
         self, 
         data_path : str, 
         sequences : list = ['00'], 
         augment = False, 
-        sequence_length : int = 4, 
-        device : str ='cuda'
+        sequence_length : int = 4
     ) -> None:
         super().__init__()
 
@@ -117,7 +149,6 @@ class FlowKittiDataset3(data.Dataset):
         else:
             self.augment = augment
         self.N = sequence_length
-        self.device = device
 
         self.data_path = path.join(data_path, 'dataset')
         self.sequence_lengths = [0]
@@ -132,16 +163,14 @@ class FlowKittiDataset3(data.Dataset):
                 raise Exception("Sequence " + sequence + " doesn't exist!")
             
             im_path = path.join(self.data_path, "sequences", sequence, "image_2")
-            sequence_length = len(glob.glob(im_path+"/*.png"))-self.N
-            self.sequence_lengths.append(self.sequence_lengths[-1]+sequence_length) 
+            sequence_length = len(glob.glob(im_path+"/*.png")) - self.N
+            self.sequence_lengths.append(self.sequence_lengths[-1] + sequence_length) 
             
             pose = np.loadtxt(path.join(self.data_path, 'poses', sequence+'.txt'), dtype=np.double)
             self.sequence_poses.append(torch.from_numpy(pose))
 
         self.sequence_lengths = self.sequence_lengths[1:]
         assert len(sequences) == len(self.sequence_lengths), "Sequence lengths are not as many as sequences"
-
-        img = io.read_image(path.join(self.data_path, "sequences", '00', "image_2", "000000.png")).float()
 
         self.flows_all = []
         for sequence in sequences:
@@ -173,26 +202,25 @@ class FlowKittiDataset3(data.Dataset):
             # Finding the sequence
             for i in range(len(self.sequence_lengths)):
                 if index >= self.sequence_lengths[i]:
-                    sequence_index = sequence_index+1
+                    sequence_index = sequence_index + 1
                     index_offset = self.sequence_lengths[i]
 
-            index = index-index_offset
+            index = index - index_offset
 
             # Getting pose difference as rotation and translation vectors
             poses_n = [self.sequence_poses[sequence_index][index+i, :] for i in range(0, self.N+1)]
 
             if reverse:
                 poses_n.reverse()
+            
             delta_transforms = [abs2rel(poses_n[i], poses_n[i+1]) for i in range(0, (self.N))]
-
             delta_rotations = torch.stack([delta_transforms[i][0] for i in range(len(delta_transforms))])
             delta_translations = torch.stack([delta_transforms[i][1] for i in range(len(delta_transforms))])
 
             flows = self.flows_all[sequence_index][index:index+self.N]
-
             if reverse:
                 flows = (-1)*flows
                 if self.N > 1:
                     flows = torch.flip(flows, dims=[0])
-                
+            
             return flows, delta_rotations, delta_translations
