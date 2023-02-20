@@ -1,5 +1,5 @@
 import torch
-
+# TODO import tensor, Tensor, inverse, cat, atan2, cos, sin from torch and simplify code
 
 def line2matrix(
     pose : torch.Tensor
@@ -124,13 +124,17 @@ def abs2rel(
     pose2 : torch.Tensor):
     """
     Convert absolute poses to relative pose change
+
+    :param pose1: First absolute pose
+    :param pose2: Second absolute pose
+    :return: List of (Euler) rotation and translation vectors
     """
 
     pose1 = line2matrix(pose1)
     pose2 = line2matrix(pose2)
-    
+ 
     inverted1 = torch.inverse(pose1)
-    delta_pose = torch.matmul(inverted1, pose2)
+    delta_pose = inverted1 @ pose2
 
     delta_rot = delta_pose[:3, :3]
     delta_rotation = matrix2euler(delta_rot)
@@ -157,11 +161,10 @@ def rel2abs(
     for i in range(instance_num):
         homogenous.append(transform(rotations[i].squeeze().double(), translations[i].squeeze().double()))
 
-    global_scale = [torch.eye(4, dtype=homogenous[0].dtype)]
+    global_scale = [torch.eye(4, dtype=homogenous[0].dtype, device=homogenous[0].device)]
     for i in range(0, instance_num):
         global_scale.append(torch.matmul(global_scale[i], homogenous[i]))
         
     global_scale = torch.stack(global_scale, dim=0)
-    #global_pos = global_scale[:, :3, -1]
     
     return global_scale

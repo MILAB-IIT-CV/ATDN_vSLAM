@@ -19,7 +19,6 @@ class Arguments():
         self.log_file : str
         self.augment_flow : bool
         self.train_sequences : list
-        self.precomputed_flow: bool
         self.stage : int
         self.w : int
 

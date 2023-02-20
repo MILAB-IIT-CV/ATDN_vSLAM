@@ -31,7 +31,10 @@ class ShapeLogLayer(torch.nn.Module):
 
     :param message: Message to print before output shape. Useful to differentiate between prints.
     """
-    def __init__(self, message : str = '') -> None:
+    def __init__(
+            self, 
+            message : str = ''
+    ) -> None:
         super(ShapeLogLayer, self).__init__()
         self.message = message
 
@@ -41,7 +44,11 @@ class ShapeLogLayer(torch.nn.Module):
 
 
 class Clock():
-    def __init__(self, name, verbose=False):
+    def __init__(
+            self, 
+            name, 
+            verbose=False
+    ):
         self.start_time = 0
         self.is_tick = True
         self.name = name
