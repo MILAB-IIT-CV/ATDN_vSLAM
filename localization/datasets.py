@@ -17,19 +17,23 @@ class ColorDataset(data.Dataset):
         self,
         data_path,
         sequence=None,
-        hls = False,
+        pth = False,
         division = 1
     ) -> None:
         super().__init__()
 
         self.division = division
-        self.hls = hls
+        self.pth = pth
         if sequence is None:
             self.data_path = data_path
         else:
             self.data_path = path.join(data_path, 'dataset', 'sequences', sequence, 'image_2')
 
-        self.len = len(glob.glob(path.join(self.data_path, "*.png")))
+        if self.pth:
+            self.len = len(glob.glob(path.join(self.data_path, "rgb", "*.pth")))
+        else:
+            self.len = len(glob.glob(path.join(self.data_path, "*.png")))
+        
         if division > 1:
             temp_len = self.len//division
             if (temp_len-1)*division > self.len-1:
@@ -46,17 +50,18 @@ class ColorDataset(data.Dataset):
         str_index = str(index)
         zero_len = (6-len(str_index))
         filename = zero_len*'0' + str_index
-        file_path = path.join(self.data_path, filename + ".png")
         
-        image = cv2.imread(file_path)
-        if self.hls:
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
+        if self.pth:
+            file_path = path.join(self.data_path, "rgb", filename + ".pth")
+            image = torch.load(file_path)
         else:
+            file_path = path.join(self.data_path, filename + ".png")
+            image = cv2.imread(file_path)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image = torch.from_numpy(image).permute(2, 0, 1)
         
-        image = torch.from_numpy(image).float().permute(2, 0, 1)
 
-        return image
+        return image.float()
 
 
 class DoubleColorDataset(data.Dataset):
