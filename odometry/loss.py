@@ -46,7 +46,6 @@ class CLVO_Loss():
         com_loss = []
         for i in range(len(pred_rot)):
             com_loss.append(self.com_loss(pred_rot[i], pred_tr[i], true_rot[i], true_tr[i], w=w, device=device))
-
         com_loss = torch.stack(com_loss, dim=0) # size: (batch, sequence-w+1)
         com_loss = com_loss.sum(-1) # size: (batch)
         
@@ -83,8 +82,8 @@ class CLVO_Loss():
             true_comm = true_homogenous_array[j] # size: (4, 4)
 
             for i in range(j+1, j+w):
-                pred_comm = pred_homogenous_array[i] @ pred_comm # size: (4, 4)
-                true_comm = true_homogenous_array[i] @ true_comm # size: (4, 4)
+                pred_comm = pred_comm @ pred_homogenous_array[i] # size: (4, 4)
+                true_comm = true_comm @ true_homogenous_array[i] # size: (4, 4)
             
             # Converting back to euler and separaing the matrix
             pred_comm_rot = matrix2euler(pred_comm[:3, :3]) # size: (3)
@@ -109,19 +108,11 @@ class CLVO_Loss():
         true_rotation, 
         true_translation
     ):
-        #log("Pred rot shape:", pred_rotation.shape)
-        #log("Pred tr shape:", pred_translation.shape)
-        #log("Pred rot shape:", true_rotation.shape)
-        #log("Pred rot shape:", true_translation.shape)
-
         diff_rotation = (pred_rotation-true_rotation)
         diff_translation = (pred_translation-true_translation)
         
         norm_rotation = (diff_rotation**2).sum(dim=-1)
         norm_translation = (diff_translation**2).sum(dim=-1)
-
-        #log("Norm rotation:", norm_rotation.shape)
-        #log("Norm translation:", norm_translation.shape)
 
         loss = self.delta*norm_translation + self.khi*norm_rotation
         return loss
