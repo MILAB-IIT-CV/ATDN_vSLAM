@@ -5,7 +5,7 @@ import torch
 from torch.utils import data
 import torchvision.io as io
 
-from utils.transforms import matrix2euler, line2matrix, abs2rel
+from ..utils.transforms import matrix2euler, line2matrix, abs2rel
 from tqdm import trange
 
 

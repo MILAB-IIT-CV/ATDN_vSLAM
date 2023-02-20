@@ -1,7 +1,7 @@
 import torch
-from torch import nn
-from utils.helpers import  log
-from utils.transforms import matrix2euler, transform
+
+from ..utils.helpers import  log
+from ..utils.transforms import matrix2euler, transform
 
 
 class CLVO_Loss():

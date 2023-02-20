@@ -1,11 +1,11 @@
 import torch
 from torch import nn
 from torchvision.transforms import Normalize
-from layers.conv import Conv, ResidualConv
-from layers.linear import Linear
+from ..layers.conv import Conv, ResidualConv
+from ..layers.linear import Linear
 
-from utils.normalizations import get_flow_norm
-from utils.helpers import log, ShapeLogLayer
+from ..utils.normalizations import get_flow_norm
+from ..utils.helpers import log, ShapeLogLayer
 
 
 class ATDNVO(nn.Module):

@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import argparse
-from tqdm import trange
 
 from utils.transforms import matrix2euler, rel2abs
 

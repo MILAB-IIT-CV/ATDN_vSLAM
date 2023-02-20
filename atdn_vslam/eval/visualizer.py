@@ -1,6 +1,5 @@
 import argparse
 import datetime
-import os.path
 
 import matplotlib.pyplot as plt
 

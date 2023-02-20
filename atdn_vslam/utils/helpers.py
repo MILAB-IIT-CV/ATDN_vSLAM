@@ -1,6 +1,3 @@
-import sys, os
-# TODO check wheter needed
-#sys.path.insert(0, os.path.abspath(".."))
 import numpy as np
 import matplotlib.pyplot as plt
 import torch

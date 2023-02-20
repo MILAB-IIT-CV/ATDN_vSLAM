@@ -1,10 +1,10 @@
 import torch
 from torch import nn
 from torchvision.transforms import Normalize
-from layers.conv import Conv, ResidualConv
-from layers.linear import Linear
-from layers.experimental import AutoCorr
-from utils.helpers import log, ShapeLogLayer
+
+from ..layers.conv import Conv, ResidualConv
+from ..layers.linear import Linear
+from ..utils.helpers import log, ShapeLogLayer
 
 
 class TVO(nn.Module):

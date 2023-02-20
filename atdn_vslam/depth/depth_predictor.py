@@ -1,8 +1,9 @@
 from torchvision.transforms.functional import crop
 from torchvision.transforms import Resize
 from torch import nn
-from general_layers import conv
-from utils.helpers import log
+
+from ..layers import conv
+from ..utils.helpers import log
 
 
 class DepthPredictor(nn.Module):

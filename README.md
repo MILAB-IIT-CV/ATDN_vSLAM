@@ -29,9 +29,9 @@ git clone https://github.com/zacjiang/GMA
 ```
 3. After that ATDN vSLAM and its dependencies can be installed locally via
 ```bash
+python -m build
 pip install -e .
 ```
-
 
 ### Config
 

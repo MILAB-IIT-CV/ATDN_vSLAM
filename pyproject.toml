@@ -1,6 +1,9 @@
 [build-system]
-requires = ["hatchling",]
-build-backend = "hatchling.build"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["atdn_vslam", "GMA"]
 
 [project]
 name = "atdn_vslam"
@@ -19,7 +22,7 @@ dependencies = [
             "tqdm",
 ]
 authors = [
-  { name="György Richárd Bogár", email="bgyricsi@gmail.com" },
+  { name="György Richárd Bogár", email="gyrbogar@iit.bme.hu" },
   { name="Mátyás Szántó", email="mszanto@iit.bme.hu" },
 ]
 classifiers = [

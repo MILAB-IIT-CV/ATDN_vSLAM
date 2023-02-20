@@ -1,8 +1,9 @@
 import torch
 from torch import nn
-from layers.conv import Conv, ResidualConv, DUC, TransposedConv
-from utils.normalizations import get_rgb_norm
-from utils.helpers import log, ShapeLogLayer
+
+from ..layers.conv import Conv, ResidualConv, DUC, TransposedConv
+from ..utils.normalizations import get_rgb_norm
+from ..utils.helpers import log, ShapeLogLayer
 
 
 class MappingVAE(nn.Module):

@@ -12,18 +12,16 @@ import torchvision.transforms.functional as TF
 from GMA.core.network import RAFTGMA
 from GMA.core.utils.utils import InputPadder
 
-from utils.helpers import log
-from utils.transforms import transform, matrix2euler
-from utils.arguments import Arguments
-from utils.gma_parameters import GMA_Parameters
-from utils.normalizations import get_flow_norm, get_rgb_norm
+from ..utils.helpers import log
+from ..utils.transforms import transform, matrix2euler
+from ..utils.arguments import Arguments
+from ..utils.gma_parameters import GMA_Parameters
+from ..utils.normalizations import get_rgb_norm
+from ..odometry.network import ATDNVO
+from ..localization.network import MappingVAE
+from ..localization.datasets import ColorDataset
 
-from odometry.network import ATDNVO
-
-from localization.network import MappingVAE
-from localization.datasets import ColorDataset
-
-from slam_framework.frame import Frame
+from .frame import Frame
 
 
 class NeuralSLAM():
