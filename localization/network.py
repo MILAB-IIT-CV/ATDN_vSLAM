@@ -1,11 +1,8 @@
 import torch
 from torch import nn
-from torchvision.transforms import Resize, Normalize, Compose
 from layers.conv import Conv, ResidualConv, DUC, TransposedConv
-# from layers.experimental import SAct
 from utils.normalizations import get_rgb_norm
-from utils.helpers import log
-from utils.helpers import ShapeLogLayer
+from utils.helpers import log, ShapeLogLayer
 
 
 class MappingVAE(nn.Module):
@@ -19,11 +16,8 @@ class MappingVAE(nn.Module):
         out_channels = in_channels
 
         channels=[16, 16, 32, 64, 128, 128, 256]
-        target_size=(376, 1241)
 
         self.normalization = get_rgb_norm()
-
-
         self.var = variational
         self.flattened_shape = 1536
 

@@ -4,6 +4,7 @@ from torchvision.transforms import Normalize
 from layers.conv import Conv, ResidualConv
 from layers.linear import Linear
 
+from utils.normalizations import get_flow_norm
 from utils.helpers import log, ShapeLogLayer
 
 
@@ -37,10 +38,9 @@ class ATDNVO(nn.Module):
         # ----------------------
         # Implicit normalization
         # ----------------------
-        #self.normalize_flow = Normalize(mean=[0.0, 0.0], std=[41.2430, 41.1322])
-        self.normalize_flow = Normalize(mean=[0.0, 0.0], std=[58.1837, 17.7647])
+        
+        self.normalize_flow = get_flow_norm()
         self.polar_norm = nn.BatchNorm2d(num_features=2)
-        #self.normalize_depth = Normalize(mean=[0.7178], std=[0.7966])
 
         # ----------------------------------------------------
         # Feature extractor encoder module for the LSTM module
@@ -61,7 +61,7 @@ class ATDNVO(nn.Module):
 
         if compressor:
             self.encoder_CNN = nn.Sequential(
-                nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=1, groups=in_channels),
+                nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=1, groups=in_channels), # TODO omit this for it can cause overfitting
                 Conv(in_channels=self.in_channels, out_channels=16, kernel_size=7, stride=2, padding=3, activation=activation, bias=True),
                 ResidualConv(in_channels=16, out_channels=16, stride=2, activation=activation),
                 ResidualConv(in_channels=16, out_channels=16, stride=2, activation=activation),
@@ -129,25 +129,17 @@ class ATDNVO(nn.Module):
         :rtype: torch.Tensor, torch.Tensor
         """
         normalized_flows = self.normalize_flow(flows)
-        #normalized_polar = self.polar_norm(polar)
-        #normalized = torch.cat([normalized_flows, normalized_polar], dim=-3)
-        # ------------------
-        # Extracted features
-        # ------------------
-        features = self.encoder_CNN(normalized_flows)
-        #log("Encoder out: ", features.shape)
 
-        # ----------------------
+        # Extracted features
+        features = self.encoder_CNN(normalized_flows)
+
         # Long Short Term Memory
-        # ----------------------
         [self.lstm1_h, self.lstm1_c] = self.lstm1(features, [self.lstm1_h, self.lstm1_c])
         lstm2_input = self.lstm_linear(self.lstm1_h)
         [self.lstm2_h, self.lstm2_c] = self.lstm2(lstm2_input, [self.lstm2_h, self.lstm2_c])
         lstm_out = self.lstm2_h
 
-        # ----------------------------------
         # Odometry module translation branch
-        # ----------------------------------
         rotations = self.rotation_regressor(lstm_out)
         translations = self.translation_regressor(lstm_out)
 
