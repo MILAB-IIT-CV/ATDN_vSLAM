@@ -1,7 +1,7 @@
 # ATDN vSLAM
 This is the implementation of ATDN vSLAM ([paper](https://pp.bme.hu/eecs/article/view/20437)) that is an all-through Deep Learning based solution for the vision based Simultaneous Localization and Mapping (SLAM) task.
 
-![System architecture](utils/ATDN_vSLAM_fixed.png)
+![System architecture](ATDN_vSLAM.png)
 
 In case you are using this work please cite our paper:
 ```bibtex

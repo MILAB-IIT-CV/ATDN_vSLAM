@@ -10,13 +10,13 @@ from torch.utils.tensorboard.writer import SummaryWriter
 import torch.utils.tensorboard
 
 # Project module imports
-from odometry.loss import CLVO_Loss
-from odometry.datasets import FlowKittiDataset2, FlowKittiDataset3
+from .odometry.loss import CLVO_Loss
+from .odometry.datasets import FlowKittiDataset2, FlowKittiDataset3
 
-from odometry.network import ATDNVO
+from .odometry.network import ATDNVO
 
-from utils.helpers import log
-from utils.arguments import Arguments
+from .utils.helpers import log
+from .utils.arguments import Arguments
 import numpy as np
 import math
 from tqdm import tqdm
