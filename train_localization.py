@@ -1,16 +1,17 @@
 from datetime import datetime
+from tqdm import tqdm
+
 import torch
-from torch import nn
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard.writer import SummaryWriter
+import torch.utils.tensorboard
 from torch.optim import AdamW, lr_scheduler
 from torchvision.transforms import Normalize, Compose
 import torchvision.transforms.functional as TF
-from localization.datasets import ColorDataset, DepthDataset, ColorDepthDataset, DoubleColorDataset
-from localization.network import MappingVAE
-from torch.utils.tensorboard.writer import SummaryWriter
-import torch.utils.tensorboard
-from tqdm import tqdm
-from utils.arguments import Arguments
+
+from atdn_vslam.localization.datasets import ColorDataset, DepthDataset, ColorDepthDataset, DoubleColorDataset
+from atdn_vslam.localization.network import MappingVAE
+from atdn_vslam.utils.arguments import Arguments
 
 
 def train(

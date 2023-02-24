@@ -1,25 +1,21 @@
 import os
 from datetime import datetime
 
-# PyTorch imports
+# Third party imports
+import numpy as np
+from tqdm import tqdm
 import torch
 from torch import optim
 from torch.utils.data import DataLoader
-
 from torch.utils.tensorboard.writer import SummaryWriter
 import torch.utils.tensorboard
 
 # Project module imports
-from .odometry.loss import CLVO_Loss
-from .odometry.datasets import FlowKittiDataset2, FlowKittiDataset3
-
-from .odometry.network import ATDNVO
-
-from .utils.helpers import log
-from .utils.arguments import Arguments
-import numpy as np
-import math
-from tqdm import tqdm
+from atdn_vslam.odometry.loss import CLVO_Loss
+from atdn_vslam.odometry.datasets import FlowKittiDataset2, FlowKittiDataset3
+from atdn_vslam.odometry.network import ATDNVO
+from atdn_vslam.utils.helpers import log
+from atdn_vslam.utils.arguments import Arguments
 
 
 def train(args, model, dataloader, odometry_loss, optimizer, scheduler, writer, epoch, log_vals=[]):
@@ -31,14 +27,10 @@ def train(args, model, dataloader, odometry_loss, optimizer, scheduler, writer, 
 
         loss = 0
         rots, trs = [], []
-        #optimizer.zero_grad(set_to_none=True)
+
         optimizer.zero_grad()
         for j in range(args.sequence_length):
             input_data = fl[:, j].to(args.device).float()
-
-            #mag = (input_data[:, 0]**2)+(input_data[:, 1]**2).sqrt()
-            #deg = torch.atan2(input_data[:, 1], input_data[:, 0])
-            #polar = torch.stack([mag, deg], dim=1)
 
             pred_rotations, pred_translations = model(input_data)
             
@@ -100,7 +92,7 @@ def main():
     log("Trainable parameters:", trainable_params)
 
     if args.stage > 1:
-        load_path = args.weight_file+str(args.stage-1)+".pth"
+        load_path = args.weight_file + str(args.stage-1) + ".pth"
         log("Loading weigths from ", load_path)
         model.load_state_dict(torch.load(load_path, map_location=args.device))
 
@@ -143,7 +135,7 @@ def main():
         log("Saving loss log")
         log_path = args.log_file+str(args.stage-1)+"_"+str(epoch)+".txt"
         np.savetxt(log_path, np.array(log_vals_actual))
-        save_path = (args.weight_file+str(args.stage) + model_code.lower() + ".pth")
+        save_path = (args.weight_file + str(args.stage) + '_' + model_code.lower() + ".pth")
         log("Saving model as ", save_path)
         torch.save(model.state_dict(), save_path)
 
@@ -153,5 +145,6 @@ def main():
     log("Training started at: ", now, " and ended at: ", datetime.now(), ". Ellapsed time: ", datetime.now()-now)
 
 
-# Calling main training method
-main()
+if __name__ == "__main__":
+    # Calling main training method
+    main()

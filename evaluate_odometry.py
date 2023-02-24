@@ -11,11 +11,11 @@ import numpy as np
 from tqdm import tqdm, trange
 
 # Project module imports
-from odometry.datasets import FlowKittiDataset2
-from odometry.network import ATDNVO
-from utils.helpers import log
-from utils.transforms import transform, rel2abs
-from utils.arguments import Arguments
+from atdn_vslam.odometry.datasets import FlowKittiDataset2
+from atdn_vslam.odometry.network import ATDNVO
+from atdn_vslam.utils.helpers import log
+from atdn_vslam.utils.transforms import transform, rel2abs
+from atdn_vslam.utils.arguments import Arguments
 
 
 def run_inference(model, args, sequence, exp, stage, forward):
@@ -35,10 +35,9 @@ def run_inference(model, args, sequence, exp, stage, forward):
     dataset = FlowKittiDataset2(args.data_path, [sequence], augment=forward, sequence_length=sequence_length)
 
     model_code = str(model.__class__.__name__) + model.suffix
-    load_file = "checkpoints/" + str(exp) + '_' + str(stage) + model_code.lower() + ".pth"
+    load_file = "atdn_vslam/checkpoints/" + str(exp) + '_' + str(stage) + '_' + model_code.lower() + ".pth"
     log("Load file:", load_file)
     model.load_state_dict(torch.load(load_file, map_location=args.device))
-    
     eval_time = 0.0
     with torch.no_grad():
         model.to(args.device)
@@ -90,7 +89,7 @@ def save_results(abs_poses, exp, arch, stage, seq, forward, need_plot=True):
         numpy_poses.append((np.array(abs_poses[i][:3, :].view(12).numpy())))
     numpy_poses = np.stack(numpy_poses, axis=0)
 
-    exp_path = os.path.join("eval", "results", str(exp))
+    exp_path = os.path.join("atdn_vslam", "eval", "results", str(exp))
     if not os.path.exists(exp_path):
         os.mkdir(exp_path)
     exp_path = os.path.join(exp_path, arch)
