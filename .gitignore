@@ -24,3 +24,4 @@ atdn_vslam.egg-info
 .idea
 *.sh
 eval/calib.txt
+disparitynet
