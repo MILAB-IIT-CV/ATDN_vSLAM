@@ -1,5 +1,4 @@
 import os
-import glob
 import time
 
 from tqdm import trange
@@ -50,7 +49,6 @@ def test_odometry(args, weights_file):
 
     f.write("Average odometry time: " + str(slam_call_time.mean()) + '\n')
     f.write("Odometry time std: " + str(slam_call_time.std()) + '\n')
-    fps_manual = 1/(slam_call_time.mean())
     f.write("FPS from time: " + str(1/slam_call_time.mean()) + '\n')
 
     slam.end_odometry()
@@ -151,7 +149,6 @@ def test_relocalization(args, weights_file):
 
 def main():
     args = Arguments.get_arguments()
-    sequence_length = 1
     weights_file = "atdn_vslam/checkpoints/11_1_atdnvo_c.pth" # TODO overwrite to actual
 
     if not os.path.exists("test_results"):

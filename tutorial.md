@@ -5,28 +5,27 @@ In this tutorial we show a detailed example of how to use ATDN vSLAM.
 The arguments class is a convenient way to handle general configuration variables.
 
 ```python
-import glob
+import os
 import time
 
-from tqdm.notebook import trange
-import torch
+from tqdm import trange
 import numpy as np
-import matplotlib as mpl
-mpl.rcParams['figure.dpi'] = 100
 import matplotlib.pyplot as plt
+import torch
+import torchvision.transforms.functional as TF
 
-from slam_framework.neural_slam import NeuralSLAM
-from utils.helpers import log
-from utils.arguments import Arguments
-from localization.datasets import ColorDataset
+from atdn_vslam.slam_framework.neural_slam import NeuralSLAM
+from atdn_vslam.localization.datasets import ColorDataset
+from atdn_vslam.odometry.datasets import KittiOdometryDataset
+from atdn_vslam.utils.arguments import Arguments
+from atdn_vslam.utils.transforms import matrix2euler
+from atdn_vslam.utils.helpers import log
 
 
 args = Arguments.get_arguments()
-sequence_length = 1
-
+weights_file = "checkpoints/10_1_atdnvo_c.pth" # TODO overwrite tod actual
 dataset = ColorDataset(data_path=args.data_path, sequence="00")
 
-weights_file = "checkpoints/10_1atdnvo_c.pth" # TODO overwrite tod actual
 slam = NeuralSLAM(args, odometry_weights=weights_file)
 ```
 
@@ -53,13 +52,11 @@ for i in trange(len(dataset)):
     slam_call_time.append(end-start)
     global_scale.append(current_pose)
 
-
 global_scale = torch.stack(global_scale, dim=0)
 slam_call_time = np.array(slam_call_time)
 
 log("Average odometry time: ", slam_call_time.mean())
 log("Odometry time std: ", slam_call_time.std())
-fps_manual = 1/(slam_call_time.mean())
 log("FPS from time: ", 1/slam_call_time.mean())
 ```
 
@@ -81,33 +78,15 @@ for i in range(len(slam)):
 keyframe_positions = torch.stack(keyframe_positions, dim=0).to("cpu")
 X_key, Y_key, Z_key = keyframe_positions[:, 0], keyframe_positions[:, 1], keyframe_positions[:, 2]
 
+plt.figure()
 plt.scatter(X_key, Z_key)
-plt.show()
+plt.savefig("test_results/keyframe_poses.png")
 ```
 
 ### After mapping, relocalization can be done by calling the SLAM object with the querry image
 
 ```python
-import time
-
-import torch
-import torchvision.transforms.functional as TF
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-mpl.rcParams['figure.dpi'] = 100
-
-from utils.helpers import log
-from utils.transforms import matrix2euler
-from utils.arguments import Arguments
-from odometry.datasets import KittiOdometryDataset
-from slam_framework.neural_slam import NeuralSLAM
-
-
-args = Arguments.get_arguments()
-dataset = KittiOdometryDataset(data_path=args.data_path, sequence="00")
-
-weights_file = "checkpoints/10_1atdnvo_c.pth" # TODO overwrite to actual
+# You can start from relocalization state if odometry and mapping is done in a previous run
 slam = NeuralSLAM(args, odometry_weights=weights_file, start_mode="relocalization")
 
 with torch.no_grad():
@@ -117,15 +96,18 @@ with torch.no_grad():
     log("Distances shape", distances.shape)
 
     # Histogram
+    plt.figure()
     plt.hist(distances.cpu().numpy(), bins=1000)
     plt.xlabel("Distance from sample")
     plt.ylabel("Count of elements")
-    plt.show()
+    plt.savefig("test_results/distance_histogram.png")
 
+    # Distances
+    plt.figure()
     plt.plot(distances.cpu().numpy())
     plt.xlabel("Index of keyframe")
     plt.ylabel("Embedding distance from sample")
-    plt.show()
+    plt.savefig("test_results/distances.png")
     
     # Predicted index
     pred_index = torch.argmin(distances)
