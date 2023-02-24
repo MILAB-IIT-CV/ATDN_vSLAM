@@ -1,5 +1,5 @@
 import yaml
-
+import os
 
 class Arguments():
     def __init__(self):
@@ -23,6 +23,11 @@ class Arguments():
         self.w : int
 
     @classmethod
-    def get_arguments(cls, config_path="utils/config.yaml"):
+    def get_arguments(cls, config_path=None):
+        if config_path is None:
+            current_path = os.path.realpath(__file__)
+            head, _ = os.path.split(current_path)
+            config_path = os.path.join(head, "config.yaml")
+
         args = yaml.load(open(config_path, "r"), yaml.Loader)
         return args
