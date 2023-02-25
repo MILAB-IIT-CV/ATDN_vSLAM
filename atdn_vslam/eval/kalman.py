@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import torch
 import argparse
 
-from utils.transforms import matrix2euler, rel2abs
+from ..utils.transforms import matrix2euler, rel2abs
 
 
 def preprocess_poses_euler(poses):
