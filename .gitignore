@@ -6,7 +6,7 @@ tests.ipynb
 GMA
 tools
 log/*
-atdn_vslam/checkpoints/*.pth
+atdn_vslam/checkpoints/archive/*.pth
 atdn_vslam/eval/results
 atdn_vslam/eval/archive
 atdn_vslam/eval/GT
