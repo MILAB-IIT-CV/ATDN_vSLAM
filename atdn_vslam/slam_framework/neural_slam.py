@@ -6,7 +6,7 @@ from tqdm import trange
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from torchvision.transforms import Normalize, Compose
+from torchvision.transforms import Normalize, Compose, ColorJitter
 import torchvision.transforms.functional as TF
 
 from GMA.core.network import RAFTGMA
@@ -307,8 +307,8 @@ class NeuralSLAM():
         Generate autoencoder based latent space map
         """
 
-        num_epochs = 5 # TODO increase!
-        batch_size = 8
+        num_epochs = 50
+        batch_size = 16
         running_losses = []
 
         # Creating model for mapping net
@@ -320,16 +320,14 @@ class NeuralSLAM():
         optimizer = torch.optim.AdamW(self.__mapping_net.parameters(), lr=1e-3, weight_decay=1e-3)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, num_epochs*len(dataloader), eta_min=1e-5)
 
-        #aug = transforms.Compose([
-        #    transforms.ColorJitter(brightness=0.1, saturation=0.1, hue=1e-4),
-        #])
+        aug = ColorJitter(brightness=0.1, saturation=0.1, hue=1e-3)
         for i in trange(num_epochs):
             running_loss = 0
             for batch, im in enumerate(dataloader):
                 optimizer.zero_grad()
                 im = im.to(self.__args.device)
-
-                mu, logvar, latent, im_pred = self.__mapping_net(im)
+                im_in = aug(im)
+                mu, logvar, latent, im_pred = self.__mapping_net(im_in)
 
                 im = TF.resize(im, list(im_pred.size()[-2:]))
                 im = TF.gaussian_blur(im, [5, 5])
