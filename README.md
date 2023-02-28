@@ -45,7 +45,7 @@ device: cuda:0
 epochs: 1
 epsilon: 1.0e-08
 keyframes_path: /path/to/SLAM/output
-weight_file: checkpoints/clvo_generalization4_
+weight_file: atdn_vslam/checkpoints/clvo_generalization4_
 log_file: loss_log/generalization4_
 lr: 0.01
 stage: 1
