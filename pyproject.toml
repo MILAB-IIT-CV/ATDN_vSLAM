@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["atdn_vslam", "GMA"]
+packages = ["atdn_vslam"]
 
 [project]
 name = "atdn_vslam"
