@@ -18,14 +18,14 @@ In case you are using this work, please cite our paper:
 ```
 
 ## Setup
-1. Updates & venv
+1. Venv & updates
 ```bash
-python3 -m pip install --upgrade pip
-python3 -m pip install --upgrade setuptools
-
 # optional if you want to work in a virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
+
+python3 -m pip install --upgrade pip
+python3 -m pip install --upgrade setuptools
 ```
 2. Clone the repo and go to its library
 ```bash
