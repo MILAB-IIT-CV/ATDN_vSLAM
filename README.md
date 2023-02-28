@@ -18,19 +18,24 @@ In case you are using this work, please cite our paper:
 ```
 
 ## Setup
-1. Clone the repo and go to its library
+1. Updates & venv
+```bash
+python3 -m pip install --upgrade pip
+python3 -m pip install --upgrade setuptools
+
+# optional if you want to work in a virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+```
+2. Clone the repo and go to its library
 ```bash
 git clone https://github.com/MILAB-IIT-CV/ATDN_vSLAM.git
 cd ATDN_vSLAM
 ```
-2. Clone the repo of [GMA](https://github.com/zacjiang/GMA) optical flow model: Used for Deep Learnig based flow estimation
+3. Finally, you can install ATDN vSLAM and its dependencies locally via
 ```bash
-git clone https://github.com/zacjiang/GMA
-```
-3. After that ATDN vSLAM and its dependencies can be installed locally via
-```bash
-python -m build
-pip install -e .
+python3 -m pip install GMA-1.0.0-py3-none-any.whl
+python3 -m pip install -e .
 ```
 
 ### Config

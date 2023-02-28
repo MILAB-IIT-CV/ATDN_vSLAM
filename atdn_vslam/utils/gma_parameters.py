@@ -2,7 +2,7 @@ class GMA_Parameters():
     def __init__(self):
 
         # GMA parameters
-        self.model = "GMA/checkpoints/gma-kitti.pth"
+        self.model = "atdn_vslam/checkpoints/gma-kitti.pth"
         self.dataset = "kitti"
         self.iters = 12
         self.num_heads = 1
