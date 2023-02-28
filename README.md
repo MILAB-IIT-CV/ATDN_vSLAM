@@ -37,6 +37,7 @@ cd ATDN_vSLAM
 python3 -m pip install GMA-1.0.0-py3-none-any.whl
 python3 -m pip install -e .
 ```
+4. Add yaml config as described in the following section
 
 ### Config
 
