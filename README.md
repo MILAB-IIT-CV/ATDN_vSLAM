@@ -3,7 +3,7 @@ This is the implementation of ATDN vSLAM ([paper](https://pp.bme.hu/eecs/article
 
 ![System architecture](ATDN_vSLAM.png)
 
-In case you are using this work please cite our paper:
+In case you are using this work, please cite our paper:
 ```bibtex
 @article{Szanto_Bogar_Vajta_2022, 
     title={ATDN vSLAM: An All-Through Deep Learning-Based Solution for Visual Simultaneous Localization and Mapping},
@@ -35,7 +35,7 @@ pip install -e .
 
 ### Config
 
- Before using the SLAM, create a config.yaml file in the utils folder. Here is an example what it should contain:
+ Before using the SLAM, create a config.yaml file under atdn_vslam/utils. Here is an example what it should contain:
  ```yaml
 !!python/object:utils.arguments.Arguments
 alpha: 1
@@ -45,7 +45,7 @@ device: cuda:0
 epochs: 1
 epsilon: 1.0e-08
 keyframes_path: /path/to/SLAM/output
-weight_file: checkpoints/clvo_generalization4_
+weight_file: atdn_vslam/checkpoints/clvo_generalization4_
 log_file: loss_log/generalization4_
 lr: 0.01
 stage: 1
