@@ -43,8 +43,7 @@ python3 -m pip install -e .
 
  Before using the SLAM, create a config.yaml file under atdn_vslam/utils. Here is an example what it should contain:
  
-| :warning: __WARNING__ |
-| The fields "_data_path_" and "_keyframes_path_" has to be changed! Currently only the KITTI odometry dataset is supported so "_data_path_" has to be set to the path where its _dataset_ folder is placed. "_keyframes_path_" is the path where you want ATDN_vSLAM to save its outputs. |
+| :exclamation: __WARNING__ : The fields "_data_path_" and "_keyframes_path_" has to be changed! Currently only the KITTI odometry dataset is supported so "_data_path_" has to be set to the path where its _dataset_ folder is placed. "_keyframes_path_" is the path where you want ATDN_vSLAM to save its outputs. |
 |----------------------------------------------|
 
  ```yaml
