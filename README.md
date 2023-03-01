@@ -45,9 +45,8 @@ python3 -m pip install -e .
  
 > **Note**: The fields "_data_path_" and "_keyframes_path_" have to be changed! 
 > 
-> Currently, only the KITTI odometry dataset is supported so "_data_path_" has to be set to the path where its _dataset_ folder is placed. You can download the KITTI dataset from the official [KITTI website](https://www.cvlibs.net/datasets/kitti/eval_odometry.php). 
-> 
-> "_keyframes_path_" is the path where you want ATDN_vSLAM to save its outputs.
+> - Currently, only the KITTI odometry dataset is supported so "_data_path_" has to be set to the path where its _dataset_ folder is placed. You can download the KITTI dataset from the official [KITTI website](https://www.cvlibs.net/datasets/kitti/eval_odometry.php). 
+> - "_keyframes_path_" is the path where you want ATDN_vSLAM to save its outputs.
 
  ```yaml
 !!python/object:utils.arguments.Arguments
