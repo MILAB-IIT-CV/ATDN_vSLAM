@@ -24,7 +24,7 @@ from atdn_vslam.utils.helpers import log
 
 
 args = Arguments.get_arguments()
-weights_file = "checkpoints/10_1_atdnvo_c.pth" # TODO overwrite tod actual
+weights_file = "atdn_vslam/checkpoints/10_1_atdnvo_c.pth" # TODO overwrite tod actual
 dataset = ColorDataset(data_path=args.data_path, sequence="00")
 
 slam = NeuralSLAM(args, odometry_weights=weights_file)
@@ -93,6 +93,7 @@ After mapping, relocalization can be done by calling the SLAM object with the qu
 
 ```python
 # You can start from relocalization state if odometry and mapping is done in a previous run
+dataset = KittiOdometryDataset(data_path=args.data_path, sequence="00")
 slam = NeuralSLAM(args, odometry_weights=weights_file, start_mode="relocalization")
 
 with torch.no_grad():
