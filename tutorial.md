@@ -1,4 +1,4 @@
-# How to use the SLAM system
+# Getting started
 In this tutorial we show a detailed example of how to use ATDN vSLAM.
 
 ### Imports, dataset, arguments object and SLAM instantiation.
