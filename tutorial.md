@@ -1,7 +1,7 @@
 # Getting started
 In this tutorial we show a detailed example of how to use ATDN vSLAM.
 
-## Imports, dataset, arguments object and SLAM instantiation.
+## Imports, datasets, arguments and SLAM instantiation.
 The arguments class is a convenient way to handle general configuration variables.
 Using the atdn_vslam datasets is an easy way to show the functionality with the KITTI odometry dataset. If you would like to test ATDN with custom data, the only requirement is to use RGB images (valued between 0 and 255) as float tensors with a shape of (3, 376, 1232).
 
