@@ -2,7 +2,6 @@
 In this tutorial we show a detailed example of how to use ATDN vSLAM.
 
 ## Imports, dataset, arguments object and SLAM instantiation.
--------------------------------------------------------------
 The arguments class is a convenient way to handle general configuration variables.
 Using the atdn_vslam datasets is an easy way to show the functionality with the KITTI odometry dataset. If you would like to test ATDN with custom data, the only requirement is to use RGB images (valued between 0 and 255) as float tensors with a shape of (3, 376, 1232).
 
@@ -32,7 +31,6 @@ slam = NeuralSLAM(args, odometry_weights=weights_file)
 ```
 
 ## Changing state
------------------
 After that, SLAM state can be changed from idle to odometry. The actual SLAM state can be accessed through the mode() method.
 
 ```python
@@ -41,7 +39,6 @@ print("SLAM mode: ", slam.mode())
 ```
 
 ## Odometry
------------
 Next, odometry estimations can be made by calling the SLAM object. In this example, the inference is extended with a simple runtime benchmarking.
 
 ```python
@@ -67,7 +64,6 @@ log("FPS from time: ", 1/slam_call_time.mean())
 ```
 
 ## Mapping
------------------------------------------
 When the environment is explored, ATDN vSLAM can be changed to mapping by ending the odometry. This will initiate the learning procedure of the general map of registered keyframes.
 
 ```python
@@ -75,7 +71,6 @@ slam.end_odometry()
 ```
 
 ## Retrieving keyframe data
----------------------------
 Indexing the SLAM object gives us a keyframe. Through a keyframe we can acces the keyframe's image path, pose and mapping code.
 
 ```python
@@ -94,7 +89,6 @@ plt.savefig("test_results/keyframe_poses.png")
 ```
 
 ## Relocalization
------------------
 After mapping, relocalization can be done by calling the SLAM object with the querry image
 
 ```python
