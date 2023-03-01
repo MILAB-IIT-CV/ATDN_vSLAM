@@ -39,7 +39,7 @@ python3 -m pip install -e .
 ```
 4. Add yaml config as described in the following section
 
-### Config
+## Config
 
  Before using the SLAM, create a config.yaml file under atdn_vslam/utils. Here is an example what it should contain:
  
